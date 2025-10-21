@@ -11,18 +11,18 @@ export default function HomePage() {
         <header className="text-center mb-16">
           <div className="inline-flex items-center gap-2 mb-4 px-4 py-2 bg-primary/10 rounded-full">
             <Sparkles className="h-4 w-4 text-primary" />
-            <span className="text-sm font-medium text-primary">Powered by RAG & AI</span>
+            <span className="text-sm font-medium text-primary">Powered by RAG & IA</span>
           </div>
           <h1 className="text-5xl font-bold mb-4 text-balance">Questioning Agent</h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto text-balance">
-            Generate educational questions at multiple cognitive levels from your documents using advanced AI
+            Gere questões educacionais em múltiplos níveis cognitivos a partir dos seus documentos usando IA avançada
           </p>
           <div className="flex gap-4 justify-center mt-8">
             <Button asChild size="lg">
-              <Link href="/dashboard">Get Started</Link>
+              <Link href="/dashboard">Começar</Link>
             </Button>
             <Button asChild variant="outline" size="lg">
-              <Link href="/docs">Learn More</Link>
+              <Link href="/docs">Saiba Mais</Link>
             </Button>
           </div>
         </header>
@@ -32,84 +32,84 @@ export default function HomePage() {
           <Card>
             <CardHeader>
               <FileText className="h-8 w-8 mb-2 text-primary" />
-              <CardTitle>Document Upload</CardTitle>
-              <CardDescription>Support for PDF, DOCX, TXT, and Markdown files</CardDescription>
+              <CardTitle>Upload de Documentos</CardTitle>
+              <CardDescription>Suporte para arquivos PDF, DOCX, TXT e Markdown</CardDescription>
             </CardHeader>
           </Card>
 
           <Card>
             <CardHeader>
               <Brain className="h-8 w-8 mb-2 text-primary" />
-              <CardTitle>RAG Pipeline</CardTitle>
-              <CardDescription>Vector embeddings with semantic search and retrieval</CardDescription>
+              <CardTitle>Pipeline RAG</CardTitle>
+              <CardDescription>Embeddings vetoriais com busca semântica e recuperação</CardDescription>
             </CardHeader>
           </Card>
 
           <Card>
             <CardHeader>
               <Sparkles className="h-8 w-8 mb-2 text-primary" />
-              <CardTitle>AI Generation</CardTitle>
-              <CardDescription>Questions across all Bloom&apos;s Taxonomy levels</CardDescription>
+              <CardTitle>Geração com IA</CardTitle>
+              <CardDescription>Questões em todos os níveis da Taxonomia de Bloom</CardDescription>
             </CardHeader>
           </Card>
 
           <Card>
             <CardHeader>
               <Download className="h-8 w-8 mb-2 text-primary" />
-              <CardTitle>Export & Review</CardTitle>
-              <CardDescription>Edit questions and export to JSON or CSV</CardDescription>
+              <CardTitle>Exportar e Revisar</CardTitle>
+              <CardDescription>Edite questões e exporte para JSON ou CSV</CardDescription>
             </CardHeader>
           </Card>
         </div>
 
         {/* How it Works */}
         <section className="max-w-4xl mx-auto">
-          <h2 className="text-3xl font-bold text-center mb-8">How It Works</h2>
+          <h2 className="text-3xl font-bold text-center mb-8">Como Funciona</h2>
           <div className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>1. Upload Your Document</CardTitle>
+                <CardTitle>1. Envie Seu Documento</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">
-                  Upload PDF, DOCX, TXT, or Markdown files. The system will automatically process and chunk your
-                  content.
+                  Envie arquivos PDF, DOCX, TXT ou Markdown. O sistema irá processar e dividir automaticamente seu
+                  conteúdo.
                 </p>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader>
-                <CardTitle>2. Generate Embeddings</CardTitle>
+                <CardTitle>2. Gere Embeddings</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">
-                  Your document is converted into vector embeddings and indexed for semantic search using PostgreSQL
-                  with pgvector.
+                  Seu documento é convertido em embeddings vetoriais e indexado para busca semântica usando PostgreSQL
+                  com pgvector.
                 </p>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader>
-                <CardTitle>3. Generate Questions</CardTitle>
+                <CardTitle>3. Gere Questões</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">
-                  Select cognitive levels and let AI generate targeted questions with evidence citations and difficulty
-                  ratings.
+                  Selecione níveis cognitivos e deixe a IA gerar questões direcionadas com citações de evidências e
+                  níveis de dificuldade.
                 </p>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader>
-                <CardTitle>4. Review & Export</CardTitle>
+                <CardTitle>4. Revise e Exporte</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">
-                  Review generated questions, make edits if needed, and export to JSON or CSV for use in your learning
-                  management system.
+                  Revise as questões geradas, faça edições se necessário e exporte para JSON ou CSV para uso em seu
+                  sistema de gerenciamento de aprendizagem.
                 </p>
               </CardContent>
             </Card>

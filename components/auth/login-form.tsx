@@ -30,7 +30,7 @@ export function LoginForm() {
       }
       // If successful, the server action will redirect
     } catch {
-      setError("An error occurred. Please try again.")
+      setError("Ocorreu um erro. Por favor, tente novamente.")
     } finally {
       setIsLoading(false)
     }
@@ -45,24 +45,24 @@ export function LoginForm() {
       )}
 
       <div className="space-y-2">
-        <Label htmlFor="email">Email</Label>
-        <Input id="email" name="email" type="email" placeholder="you@example.com" required disabled={isLoading} />
+        <Label htmlFor="email">E-mail</Label>
+        <Input id="email" name="email" type="email" placeholder="seu@email.com" required disabled={isLoading} />
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="password">Password</Label>
+        <Label htmlFor="password">Senha</Label>
         <Input id="password" name="password" type="password" required disabled={isLoading} />
       </div>
 
       <Button type="submit" className="w-full" disabled={isLoading}>
         {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-        Sign In
+        Entrar
       </Button>
 
       <p className="text-center text-sm text-muted-foreground">
-        Don&apos;t have an account?{" "}
+        Não tem uma conta?{" "}
         <Link href="/register" className="text-primary hover:underline">
-          Sign up
+          Cadastre-se
         </Link>
       </p>
     </form>
