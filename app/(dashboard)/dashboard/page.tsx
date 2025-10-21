@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic"
+
 import { requireUser } from "@/lib/auth/session"
 import { getDocumentsByUserId } from "@/lib/db/queries"
 import { DocumentUpload } from "@/components/documents/document-upload"
