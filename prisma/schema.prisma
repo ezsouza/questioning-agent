@@ -1,0 +1,228 @@
+generator client {
+  provider        = "prisma-client-js"
+  output          = "../lib/generated/prisma"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [vector]
+}
+
+model User {
+  id            String     @id @default(dbgenerated("(gen_random_uuid())::text"))
+  name          String?
+  email         String     @unique
+  emailVerified Boolean    @default(false) @map("email_verified")
+  image         String?
+  password      String?
+  createdAt     DateTime   @default(now()) @map("created_at")
+  updatedAt     DateTime   @updatedAt @map("updated_at")
+  accounts      Account[]
+  documents     Document[]
+  questions     Question[]
+  sessions      Session[]
+
+  @@map("users")
+}
+
+model Account {
+  id                String    @id @default(dbgenerated("(gen_random_uuid())::text"))
+  userId            String    @map("user_id")
+  accountId         String    @map("account_id")
+  provider          String
+  providerAccountId String    @map("provider_account_id")
+  accessToken       String?   @map("access_token")
+  refreshToken      String?   @map("refresh_token")
+  idToken           String?   @map("id_token")
+  expiresAt         DateTime? @map("expires_at")
+  tokenType         String?   @map("token_type")
+  scope             String?
+  password          String?
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+  @@index([provider])
+  @@map("account")
+}
+
+model Session {
+  id        String   @id @default(dbgenerated("(gen_random_uuid())::text"))
+  userId    String   @map("user_id")
+  token     String   @unique
+  expiresAt DateTime @map("expires_at")
+  ipAddress String?  @map("ip_address")
+  userAgent String?  @map("user_agent")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([token])
+  @@map("session")
+}
+
+model Verification {
+  id         String   @id @default(dbgenerated("(gen_random_uuid())::text"))
+  identifier String
+  value      String
+  expiresAt  DateTime @map("expires_at")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  @@index([identifier])
+  @@map("verification")
+}
+
+model Document {
+  id             String            @id @default(dbgenerated("(gen_random_uuid())::text"))
+  name           String
+  type           String
+  size           Int
+  blobUrl        String            @map("blob_url")
+  status         DocumentStatus    @default(UPLOADING)
+  userId         String            @map("user_id")
+  createdAt      DateTime          @default(now()) @map("created_at")
+  updatedAt      DateTime          @updatedAt @map("updated_at")
+  chunks         Chunk[]
+  versions       DocumentVersion[]
+  user           User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  generationLogs GenerationLog[]
+  queryLogs      QueryLog[]
+  questions      Question[]
+
+  @@index([userId])
+  @@index([status])
+  @@map("documents")
+}
+
+model DocumentVersion {
+  id         String   @id @default(dbgenerated("(gen_random_uuid())::text"))
+  documentId String   @map("document_id")
+  version    Int
+  content    String
+  metadata   Json?
+  createdAt  DateTime @default(now()) @map("created_at")
+  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@unique([documentId, version])
+  @@map("document_versions")
+}
+
+model Chunk {
+  id         String      @id @default(dbgenerated("(gen_random_uuid())::text"))
+  documentId String      @map("document_id")
+  content    String
+  position   Int
+  metadata   Json?
+  createdAt  DateTime    @default(now()) @map("created_at")
+  document   Document    @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  embeddings Embedding[]
+
+  @@index([documentId])
+  @@index([position])
+  @@map("chunks")
+}
+
+model Embedding {
+  id        String                 @id @default(dbgenerated("(gen_random_uuid())::text"))
+  chunkId   String                 @map("chunk_id")
+  vector    Unsupported("vector")?
+  model     String
+  provider  String
+  createdAt DateTime               @default(now()) @map("created_at")
+  chunk     Chunk                  @relation(fields: [chunkId], references: [id], onDelete: Cascade)
+
+  @@unique([chunkId, model])
+  @@index([chunkId])
+  @@map("embeddings")
+}
+
+model Question {
+  id         String             @id @default(dbgenerated("(gen_random_uuid())::text"))
+  documentId String             @map("document_id")
+  userId     String             @map("user_id")
+  text       String
+  level      CognitiveLevel
+  difficulty QuestionDifficulty
+  evidence   String[]
+  metadata   Json?
+  createdAt  DateTime           @default(now()) @map("created_at")
+  updatedAt  DateTime           @updatedAt @map("updated_at")
+  document   Document           @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  user       User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([documentId])
+  @@index([userId])
+  @@index([level])
+  @@index([difficulty])
+  @@map("questions")
+}
+
+model QueryLog {
+  id         String   @id @default(dbgenerated("(gen_random_uuid())::text"))
+  documentId String   @map("document_id")
+  query      String
+  topK       Int      @map("top_k")
+  results    Json
+  latency    Int
+  createdAt  DateTime @default(now()) @map("created_at")
+  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@index([documentId])
+  @@index([createdAt])
+  @@map("query_logs")
+}
+
+model GenerationLog {
+  id             String   @id @default(dbgenerated("(gen_random_uuid())::text"))
+  documentId     String   @map("document_id")
+  provider       String
+  model          String
+  levels         String[]
+  questionsCount Int      @map("questions_count")
+  tokensUsed     Int?     @map("tokens_used")
+  latency        Int
+  estimatedCost  Decimal? @map("estimated_cost") @db.Decimal(10, 6)
+  success        Boolean  @default(true)
+  errorMessage   String?  @map("error_message")
+  createdAt      DateTime @default(now()) @map("created_at")
+  document       Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@index([documentId])
+  @@index([provider])
+  @@index([createdAt])
+  @@map("generation_logs")
+}
+
+enum DocumentStatus {
+  UPLOADING
+  PROCESSING
+  INDEXED
+  FAILED
+
+  @@map("document_status")
+}
+
+enum CognitiveLevel {
+  REMEMBER
+  UNDERSTAND
+  APPLY
+  ANALYZE
+  EVALUATE
+  CREATE
+
+  @@map("cognitive_level")
+}
+
+enum QuestionDifficulty {
+  EASY
+  MEDIUM
+  HARD
+
+  @@map("question_difficulty")
+}

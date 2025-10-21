@@ -1,14 +1,11 @@
 import { betterAuth } from "better-auth"
-import { Pool } from "@neondatabase/serverless"
-
-const pool = new Pool({ connectionString: process.env.DATABASE_URL! })
+import { prismaAdapter } from "better-auth/adapters/prisma";
+import { prisma } from "@/lib/db/prisma"
 
 export const auth = betterAuth({
-  database: {
+  database: prismaAdapter(prisma, {
     provider: "postgresql",
-    type: "pg",
-    pool,
-  },
+  }),
   emailAndPassword: {
     enabled: true,
     requireEmailVerification: false,
