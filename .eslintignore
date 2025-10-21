@@ -1,0 +1,19 @@
+# Prisma generated files
+lib/generated/**
+**/generated/**
+
+# Dependencies
+node_modules
+
+# Build outputs
+.next
+out
+dist
+build
+
+# Environment files
+.env*
+
+# Misc
+.DS_Store
+*.log
