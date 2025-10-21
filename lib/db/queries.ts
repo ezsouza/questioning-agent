@@ -14,6 +14,30 @@ import type {
  * Database query helpers using Neon SQL
  */
 
+// User queries
+export async function getUserByEmail(email: string) {
+  const result = await sql`
+    SELECT * FROM users WHERE email = ${email} LIMIT 1
+  `
+  return result[0] || null
+}
+
+export async function getUserById(id: string) {
+  const result = await sql`
+    SELECT * FROM users WHERE id = ${id} LIMIT 1
+  `
+  return result[0] || null
+}
+
+export async function createUser(data: { email: string; name: string; password: string }) {
+  const result = await sql`
+    INSERT INTO users (email, name, password)
+    VALUES (${data.email}, ${data.name}, ${data.password})
+    RETURNING id, email, name, created_at, updated_at
+  `
+  return result[0]
+}
+
 // Document queries
 export async function getDocumentById(id: string): Promise<DocumentWithRelations | null> {
   const result = await sql`

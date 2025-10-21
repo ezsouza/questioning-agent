@@ -90,6 +90,13 @@ export async function requireAuth(): Promise<SessionUser> {
 }
 
 /**
+ * Alias for requireAuth for compatibility
+ */
+export async function requireUser(): Promise<SessionUser> {
+  return requireAuth()
+}
+
+/**
  * Get user ID from session
  * Returns null if not authenticated
  */

@@ -1,4 +1,5 @@
-import pdfParse from "pdf-parse"
+// @ts-ignore - pdf-parse requires dynamic import
+const pdfParse = require("pdf-parse")
 import mammoth from "mammoth"
 
 /**
