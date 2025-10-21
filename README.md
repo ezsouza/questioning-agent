@@ -1,136 +1,175 @@
-# Questioning Agent
+# Questioning Agent 🎓
 
-A RAG-powered question generation system that creates educational questions at multiple cognitive levels (Bloom's Taxonomy) from uploaded documents.
+Sistema de geração de questões educacionais com IA usando RAG (Retrieval-Augmented Generation) que cria questões em múltiplos níveis cognitivos baseados na Taxonomia de Bloom a partir de documentos enviados.
 
-## Features
+## 📚 Projeto Acadêmico
 
-- **Document Upload & Processing**: Support for PDF, DOCX, TXT, and Markdown files
-- **Intelligent Chunking**: Text segmentation with configurable overlap
-- **Vector Embeddings**: PostgreSQL + pgvector for semantic search
-- **RAG Retrieval**: Top-k retrieval with re-ranking
-- **Multi-Level Question Generation**: Questions across all Bloom's Taxonomy levels
-- **Provider Switching**: Toggle between OpenAI GPT and Google Gemini
-- **Difficulty Estimation**: Automatic difficulty classification
-- **Review & Export**: Edit questions and export to JSON/CSV
-- **Authentication**: Secure user authentication with NextAuth.js
+Este projeto foi desenvolvido como **Trabalho de Conclusão de Curso (TCC)** para o curso de **Sistemas de Informação** da **Universidade Paulista (UNIP)**.
 
-## Tech Stack
+**Objetivo:** Desenvolver uma aplicação web que utiliza Inteligência Artificial para automatizar a geração de questões educacionais de alta qualidade, auxiliando professores e criadores de conteúdo na elaboração de avaliações pedagógicas.
+
+## ✨ Funcionalidades
+
+- **Upload e Processamento de Documentos**: Suporte para PDF, DOCX, TXT e Markdown
+- **Chunking Inteligente**: Segmentação de texto com overlap configurável
+- **Embeddings Vetoriais**: PostgreSQL + pgvector para busca semântica
+- **Recuperação RAG**: Retrieval com top-k e re-ranking
+- **Geração Multi-Nível**: Questões em todos os níveis da Taxonomia de Bloom
+- **Múltiplos Provedores**: Alternância entre OpenAI GPT e Google Gemini
+- **Estimativa de Dificuldade**: Classificação automática de complexidade
+- **Revisão e Exportação**: Edite questões e exporte para JSON/CSV
+- **Autenticação**: Sistema seguro com NextAuth.js
+
+## 🛠️ Stack Tecnológica
 
 - **Framework**: Next.js 15 (App Router) + TypeScript
-- **Styling**: Tailwind CSS v4 + shadcn/ui
-- **Database**: PostgreSQL + pgvector
-- **ORM**: Prisma
-- **AI**: Vercel AI SDK with OpenAI & Google providers
-- **Storage**: Vercel Blob
-- **Auth**: NextAuth.js v5
-- **Package Manager**: pnpm
+- **Estilização**: Tailwind CSS v4 + shadcn/ui
+- **Banco de Dados**: PostgreSQL + pgvector (Neon)
+- **ORM**: Prisma (opcional)
+- **IA**: Vercel AI SDK com OpenAI e Google
+- **Armazenamento**: Vercel Blob
+- **Autenticação**: NextAuth.js v5
+- **Gerenciador de Pacotes**: pnpm
 
-## Getting Started
+## 🚀 Começando
 
-### Prerequisites
+### Pré-requisitos
 
-- Node.js 18+ and pnpm
-- PostgreSQL with pgvector extension
-- OpenAI API key and/or Google AI API key
+- Node.js 18+ e pnpm
+- PostgreSQL com extensão pgvector
+- Chave de API OpenAI e/ou Google AI
 
-### Installation
+### Instalação Local
 
-1. Clone the repository and install dependencies:
+1. Clone o repositório e instale as dependências:
 
 \`\`\`bash
+git clone https://github.com/ezsouza/questioning-agent.git
+cd questioning-agent
 pnpm install
 \`\`\`
 
-**Note**: The `postinstall` script will automatically run `prisma generate` to create the Prisma client.
+**Nota**: O script `postinstall` executará automaticamente o `prisma generate` para criar o cliente Prisma (se aplicável).
 
-2. Copy `.env.example` to `.env.local` and fill in your credentials:
+2. Copie o arquivo de exemplo e configure suas credenciais:
 
 \`\`\`bash
-cp .env.example .env.local
+cp .env.example .env
 \`\`\`
 
-3. Setup PostgreSQL with pgvector:
+3. Configure o PostgreSQL com pgvector:
 
 \`\`\`bash
-# Install pgvector extension in your PostgreSQL database
-# Connect to your database and run:
+# Instale a extensão pgvector no seu banco PostgreSQL
+# Conecte ao banco e execute:
 CREATE EXTENSION IF NOT EXISTS vector;
 \`\`\`
 
-4. Setup the database schema:
+4. Configure o schema do banco de dados:
 
 \`\`\`bash
-# Generate Prisma client (if not already done by postinstall)
-pnpm db:generate
-
-# Push schema to database or run migrations
-pnpm db:push
-# OR
-pnpm db:migrate
-
-# (Optional) Seed with sample data
-pnpm db:seed
+# Execute o script SQL de inicialização
+psql postgresql://sua-connection-string -f scripts/init-database.sql
 \`\`\`
 
-5. Start the development server:
+5. Inicie o servidor de desenvolvimento:
 
 \`\`\`bash
 pnpm dev
 \`\`\`
 
-Open [http://localhost:3000](http://localhost:3000) to see the application.
+Acesse [http://localhost:3000](http://localhost:3000) para ver a aplicação.
 
-## Available Scripts
+## 📝 Scripts Disponíveis
 
-- `pnpm dev` - Start development server
-- `pnpm build` - Build for production
-- `pnpm start` - Start production server
-- `pnpm lint` - Run ESLint
-- `pnpm type-check` - Run TypeScript type checking
-- `pnpm format` - Format code with Prettier
-- `pnpm db:generate` - Generate Prisma client
-- `pnpm db:push` - Push schema changes to database
-- `pnpm db:migrate` - Run database migrations
-- `pnpm db:studio` - Open Prisma Studio
-- `pnpm db:seed` - Seed database with sample data
+- `pnpm dev` - Inicia servidor de desenvolvimento
+- `pnpm build` - Build para produção
+- `pnpm start` - Inicia servidor de produção
+- `pnpm lint` - Executa ESLint
+- `pnpm type-check` - Verificação de tipos TypeScript
+- `pnpm format` - Formata código com Prettier
 
-## Project Structure
+## 📁 Estrutura do Projeto
 
 \`\`\`
-src/
-├── app/                    # Next.js App Router
-│   ├── api/               # API routes
-│   ├── (auth)/            # Authentication pages
-│   └── (dashboard)/       # Main application pages
-├── components/            # React components
-│   ├── ui/               # shadcn/ui components
-│   └── features/         # Feature-specific components
-├── lib/                   # Utilities and configurations
-│   ├── ai/               # AI provider integrations
-│   ├── db/               # Database utilities
-│   └── rag/              # RAG pipeline logic
-└── hooks/                 # Custom React hooks
-
-prisma/
-├── schema.prisma         # Database schema
-├── migrations/           # Database migrations
-└── seed.ts              # Database seeding script
+questioning-agent/
+├── app/                   # Next.js App Router
+│   ├── api/               # Rotas de API
+│   ├── (auth)/            # Páginas de autenticação
+│   ├── (dashboard)/       # Páginas do dashboard
+│   ├── contact/           # Página de contato
+│   └── docs/              # Documentação
+├── components/            # Componentes React
+│   ├── ui/                # Componentes shadcn/ui
+│   ├── auth/              # Componentes de autenticação
+│   ├── documents/         # Componentes de documentos
+│   ├── questions/         # Componentes de questões
+│   ├── layout/            # Componentes de layout
+│   └── docs/              # Componentes da documentação
+├── lib/                   # Utilitários e configurações
+│   ├── ai/                # Integrações com provedores de IA
+│   ├── db/                # Utilitários do banco de dados
+│   ├── auth/              # Lógica de autenticação
+│   ├── processing/        # Pipeline de processamento
+│   └── rag/               # Lógica do pipeline RAG
+├── hooks/                 # Custom React hooks
+├── public/                # Arquivos estáticos
+└── scripts/               # Scripts do banco de dados
 \`\`\`
 
-## Architecture Decisions
+## 🏗️ Decisões de Arquitetura
 
-### AI Provider Abstraction
-The system supports both OpenAI and Google Gemini through a unified interface, allowing runtime switching via environment variables.
+### Abstração de Provedores de IA
+O sistema suporta tanto OpenAI quanto Google Gemini através de uma interface unificada, permitindo alternância em tempo de execução via variáveis de ambiente.
 
-### RAG Pipeline
-Documents are chunked with overlap, embedded using provider-specific models, and stored in PostgreSQL with pgvector for efficient similarity search.
+### Pipeline RAG
+Documentos são divididos em chunks com overlap, embeddings são gerados usando modelos específicos de cada provedor, e armazenados no PostgreSQL com pgvector para busca semântica eficiente.
 
-### Question Generation
-Questions are generated with explicit cognitive level targeting, evidence citation, and difficulty estimation based on linguistic complexity.
+### Geração de Questões
+Questões são geradas com direcionamento explícito de nível cognitivo, citação de evidências e estimativa de dificuldade baseada em complexidade linguística.
 
-### Logging & Telemetry
-All queries and generations are logged with latency, cost, and quality metrics for monitoring and optimization.
+### Logging e Telemetria
+Todas as consultas e gerações são registradas com métricas de latência, custo e qualidade para monitoramento e otimização.
 
-## License
+## 🌐 Deploy na Vercel
 
-MIT
+### Variáveis de Ambiente Necessárias
+
+Configure as seguintes variáveis no painel da Vercel (**Settings → Environment Variables**):
+
+\`\`\`env
+# Banco de Dados (OBRIGATÓRIO)
+DATABASE_URL=postgresql://user:password@host.neon.tech/database?sslmode=require
+
+# Autenticação (OBRIGATÓRIO)
+JWT_SECRET=seu-secret-jwt-aqui
+NEXTAUTH_SECRET=seu-secret-nextauth-aqui
+NEXTAUTH_URL=https://seu-dominio.vercel.app
+
+# IA (OBRIGATÓRIO)
+OPENAI_API_KEY=sk-proj-xxxxxxxxxxxx
+
+# Storage (OBRIGATÓRIO)
+BLOB_READ_WRITE_TOKEN=vercel_blob_rw_xxxxxxxx
+
+# Opcional
+GOOGLE_API_KEY=sua-chave-google-ai
+RESEND_API_KEY=re_xxxxxxxxxx
+\`\`\`
+
+### Passos para Deploy
+
+1. Conecte seu repositório GitHub à Vercel
+2. Configure as variáveis de ambiente
+3. Crie um banco de dados PostgreSQL no [Neon](https://neon.tech)
+4. Execute o script SQL de inicialização no banco
+5. Configure o Vercel Blob Storage
+6. Deploy! 🚀
+
+## 📄 Licença
+
+Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
+
+---
+
+Projeto acadêmico | UNIP 2025
