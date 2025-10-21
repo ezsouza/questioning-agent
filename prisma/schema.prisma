@@ -31,22 +31,20 @@ model Account {
   id                String    @id @default(dbgenerated("(gen_random_uuid())::text"))
   userId            String    @map("user_id")
   accountId         String    @map("account_id")
-  provider          String
-  providerAccountId String    @map("provider_account_id")
+  providerId        String    @map("provider_id")
   accessToken       String?   @map("access_token")
   refreshToken      String?   @map("refresh_token")
   idToken           String?   @map("id_token")
-  expiresAt         DateTime? @map("expires_at")
-  tokenType         String?   @map("token_type")
+  accessTokenExpiresAt DateTime? @map("access_token_expires_at")
+  refreshTokenExpiresAt DateTime? @map("refresh_token_expires_at")
   scope             String?
   password          String?
   createdAt         DateTime  @default(now()) @map("created_at")
   updatedAt         DateTime  @updatedAt @map("updated_at")
   user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([provider, providerAccountId])
+  @@unique([providerId, accountId])
   @@index([userId])
-  @@index([provider])
   @@map("account")
 }
 
