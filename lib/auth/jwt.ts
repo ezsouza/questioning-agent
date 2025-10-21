@@ -1,5 +1,5 @@
-import { SignJWT, jwtVerify } from "jose"
-import { cookies } from "next/headers"
+import { auth } from "./auth"
+import { headers } from "next/headers"
 
 const secret = new TextEncoder().encode(process.env.NEXTAUTH_SECRET || "your-secret-key-min-32-characters-long")
 
@@ -11,43 +11,27 @@ export interface SessionPayload {
 }
 
 export async function createSession(userId: string, email: string, name: string | null) {
-  const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days
-
-  const token = await new SignJWT({ userId, email, name })
-    .setProtectedHeader({ alg: "HS256" })
-    .setIssuedAt()
-    .setExpirationTime(expiresAt)
-    .sign(secret)
-
-  const cookieStore = await cookies()
-  cookieStore.set("session", token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    expires: expiresAt,
-    sameSite: "lax",
-    path: "/",
-  })
-
-  return { token, expiresAt }
+  // Better Auth handles session creation automatically on sign in
+  // This function is kept for compatibility but delegates to Better Auth
+  console.warn("createSession is deprecated - Better Auth handles sessions automatically")
+  return { token: "", expiresAt: new Date() }
 }
 
 export async function verifySession(): Promise<SessionPayload | null> {
-  const cookieStore = await cookies()
-  const token = cookieStore.get("session")?.value
-
-  if (!token) {
-    return null
-  }
-
   try {
-    const verified = await jwtVerify(token, secret)
-    const payload = verified.payload as any
+    const session = await auth.api.getSession({
+      headers: await headers(),
+    })
+
+    if (!session?.user || !session?.session) {
+      return null
+    }
 
     return {
-      userId: payload.userId,
-      email: payload.email,
-      name: payload.name,
-      expiresAt: new Date((payload.exp || 0) * 1000),
+      userId: session.user.id,
+      email: session.user.email,
+      name: session.user.name || null,
+      expiresAt: new Date(session.session.expiresAt),
     }
   } catch {
     return null
@@ -55,8 +39,8 @@ export async function verifySession(): Promise<SessionPayload | null> {
 }
 
 export async function deleteSession() {
-  const cookieStore = await cookies()
-  cookieStore.delete("session")
+  // Better Auth handles session deletion via signOut
+  console.warn("deleteSession is deprecated - use signOut from client")
 }
 
 export async function getSession() {

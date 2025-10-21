@@ -1,9 +1,5 @@
-import { cookies } from 'next/headers'
-import { jwtVerify } from 'jose'
-
-const JWT_SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET || 'your-secret-key-here-change-in-production'
-)
+import { auth } from "./auth"
+import { headers } from "next/headers"
 
 export interface SessionUser {
   id: string
@@ -17,42 +13,29 @@ export interface Session {
 }
 
 /**
- * Get the current session from cookies
+ * Get the current session from Better Auth
  * Returns null if no valid session exists
  */
 export async function getSession(): Promise<Session | null> {
   try {
-    const cookieStore = await cookies()
-    const token = cookieStore.get('session')
+    const session = await auth.api.getSession({
+      headers: await headers(),
+    })
 
-    if (!token?.value) {
-      return null
-    }
-
-    // Verify and decode the JWT token
-    const verified = await jwtVerify(token.value, JWT_SECRET)
-    const payload = verified.payload as any
-
-    if (!payload.user || !payload.expires) {
-      return null
-    }
-
-    // Check if token is expired
-    const expiresAt = new Date(payload.expires)
-    if (expiresAt < new Date()) {
+    if (!session?.user || !session?.session) {
       return null
     }
 
     return {
       user: {
-        id: payload.user.id,
-        email: payload.user.email,
-        name: payload.user.name,
+        id: session.user.id,
+        email: session.user.email,
+        name: session.user.name || "",
       },
-      expires: payload.expires,
+      expires: new Date(session.session.expiresAt).toISOString(),
     }
   } catch (error) {
-    console.error('Session verification error:', error)
+    console.error("Session verification error:", error)
     return null
   }
 }

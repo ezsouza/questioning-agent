@@ -1,10 +1,9 @@
 "use server"
 
-import { hash, compare } from "bcryptjs"
 import { z } from "zod"
-import { createSession, deleteSession } from "./jwt"
-import { createUser, getUserByEmail } from "@/lib/db/queries"
+import { auth } from "./auth"
 import { redirect } from "next/navigation"
+import { headers } from "next/headers"
 
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -27,20 +26,19 @@ export async function login(formData: FormData) {
     return { error: result.error.errors[0].message }
   }
 
-  const user = await getUserByEmail(email)
+  try {
+    await auth.api.signInEmail({
+      body: {
+        email,
+        password,
+      },
+      headers: await headers(),
+    })
 
-  if (!user || !user.password) {
-    return { error: "Invalid email or password" }
+    redirect("/dashboard")
+  } catch (error: any) {
+    return { error: error?.message || "Invalid email or password" }
   }
-
-  const isPasswordValid = await compare(password, user.password)
-
-  if (!isPasswordValid) {
-    return { error: "Invalid email or password" }
-  }
-
-  await createSession(user.id, user.email, user.name)
-  redirect("/dashboard")
 }
 
 export async function register(formData: FormData) {
@@ -54,20 +52,29 @@ export async function register(formData: FormData) {
     return { error: result.error.errors[0].message }
   }
 
-  const existingUser = await getUserByEmail(email)
+  try {
+    await auth.api.signUpEmail({
+      body: {
+        name,
+        email,
+        password,
+      },
+      headers: await headers(),
+    })
 
-  if (existingUser) {
-    return { error: "Email already in use" }
+    redirect("/dashboard")
+  } catch (error: any) {
+    return { error: error?.message || "Email already in use or registration failed" }
   }
-
-  const hashedPassword = await hash(password, 10)
-  const user = await createUser(name, email, hashedPassword)
-
-  await createSession(user.id, user.email, user.name)
-  redirect("/dashboard")
 }
 
 export async function logout() {
-  await deleteSession()
+  try {
+    await auth.api.signOut({
+      headers: await headers(),
+    })
+  } catch (error) {
+    console.error("Logout error:", error)
+  }
   redirect("/")
 }
