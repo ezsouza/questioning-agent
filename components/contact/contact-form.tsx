@@ -53,7 +53,7 @@ export function ContactForm() {
 
       // Reset após 5 segundos
       setTimeout(() => setStatus('idle'), 5000)
-    } catch (error) {
+    } catch (_error) {
       setStatus('error')
       setTimeout(() => setStatus('idle'), 5000)
     }

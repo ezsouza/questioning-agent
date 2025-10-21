@@ -82,7 +82,7 @@ export function DocumentUpload() {
         throw new Error(error.error || "Upload failed")
       }
 
-      const result = await response.json()
+      const _result = await response.json()
 
       // Simulate progress for better UX
       setUploadProgress(100)

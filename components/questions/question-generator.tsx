@@ -54,7 +54,7 @@ export function QuestionGenerator({ documentId }: QuestionGeneratorProps) {
         throw new Error(error.error || "Generation failed")
       }
 
-      const result = await response.json()
+      const _result = await response.json()
 
       // Refresh the page to show new questions
       router.refresh()

@@ -1,6 +1,9 @@
-// @ts-ignore - pdf-parse requires dynamic import
-const pdfParse = require("pdf-parse")
+/* eslint-disable @typescript-eslint/no-require-imports */
 import mammoth from "mammoth"
+
+// Dynamic import for pdf-parse due to CommonJS compatibility
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const pdfParse = require("pdf-parse")
 
 /**
  * Text extraction utilities for different file types

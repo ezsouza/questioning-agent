@@ -107,7 +107,7 @@ export function QueryTester({ documentId }: QueryTesterProps) {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {result.chunks.map((chunk, index) => (
+            {result.chunks.map((chunk, _index) => (
               <div key={chunk.id} className="p-4 border rounded-lg space-y-2">
                 <div className="flex items-center justify-between">
                   <Badge variant="outline">Chunk {chunk.position + 1}</Badge>

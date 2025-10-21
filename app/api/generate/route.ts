@@ -107,7 +107,7 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error("[GENERATE_API_ERROR]", error)
 
-    const latency = Date.now() - startTime
+    const _latency = Date.now() - startTime
 
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: "Invalid input", details: error.errors }, { status: 400 })
