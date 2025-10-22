@@ -25,10 +25,10 @@ interface DocumentListProps {
 }
 
 const statusConfig = {
-  UPLOADING: { label: "Uploading", icon: Loader2, variant: "secondary" as const, className: "animate-spin" },
-  PROCESSING: { label: "Processing", icon: Loader2, variant: "secondary" as const, className: "animate-spin" },
-  INDEXED: { label: "Ready", icon: CheckCircle2, variant: "default" as const, className: "" },
-  FAILED: { label: "Failed", icon: AlertCircle, variant: "destructive" as const, className: "" },
+  UPLOADING: { label: "Enviando", icon: Loader2, variant: "secondary" as const, className: "animate-spin" },
+  PROCESSING: { label: "Processando", icon: Loader2, variant: "secondary" as const, className: "animate-spin" },
+  INDEXED: { label: "Pronto", icon: CheckCircle2, variant: "default" as const, className: "" },
+  FAILED: { label: "Falhou", icon: AlertCircle, variant: "destructive" as const, className: "" },
 }
 
 export function DocumentList({ documents }: DocumentListProps) {
@@ -36,8 +36,8 @@ export function DocumentList({ documents }: DocumentListProps) {
     return (
       <div className="text-center py-12">
         <FileText className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-        <p className="text-lg font-medium mb-2">No documents yet</p>
-        <p className="text-sm text-muted-foreground">Upload your first document to get started</p>
+        <p className="text-lg font-medium mb-2">Nenhum documento ainda</p>
+        <p className="text-sm text-muted-foreground">Envie seu primeiro documento para começar</p>
       </div>
     )
   }
@@ -67,8 +67,8 @@ export function DocumentList({ documents }: DocumentListProps) {
                 <span>{(doc.size / 1024 / 1024).toFixed(2)} MB</span>
                 {doc.status === "INDEXED" && (
                   <>
-                    <span>{doc._count.chunks} chunks</span>
-                    <span>{doc._count.questions} questions</span>
+                    <span>{doc._count.chunks} blocos</span>
+                    <span>{doc._count.questions} questões</span>
                   </>
                 )}
                 <span>{formatDistanceToNow(new Date(doc.createdAt), { addSuffix: true })}</span>
@@ -77,7 +77,7 @@ export function DocumentList({ documents }: DocumentListProps) {
 
             {doc.status === "INDEXED" && (
               <Button asChild>
-                <Link href={`/dashboard/documents/${doc.id}`}>View</Link>
+                <Link href={`/dashboard/documents/${doc.id}`}>Visualizar</Link>
               </Button>
             )}
           </div>

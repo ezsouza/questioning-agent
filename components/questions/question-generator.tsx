@@ -31,7 +31,7 @@ export function QuestionGenerator({ documentId }: QuestionGeneratorProps) {
 
   async function handleGenerate() {
     if (selectedLevels.length === 0) {
-      setError("Please select at least one cognitive level")
+      setError("Por favor, selecione pelo menos um nível cognitivo")
       return
     }
 
@@ -51,7 +51,7 @@ export function QuestionGenerator({ documentId }: QuestionGeneratorProps) {
 
       if (!response.ok) {
         const error = await response.json()
-        throw new Error(error.error || "Generation failed")
+        throw new Error(error.error || "Falha na geração")
       }
 
       const _result = await response.json()
@@ -59,7 +59,7 @@ export function QuestionGenerator({ documentId }: QuestionGeneratorProps) {
       // Refresh the page to show new questions
       router.refresh()
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Generation failed")
+      setError(err instanceof Error ? err.message : "Falha na geração")
     } finally {
       setIsGenerating(false)
     }
@@ -70,9 +70,9 @@ export function QuestionGenerator({ documentId }: QuestionGeneratorProps) {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Sparkles className="h-5 w-5" />
-          Generate Questions
+          Gerar Questões
         </CardTitle>
-        <CardDescription>Select cognitive levels and generate AI-powered questions</CardDescription>
+        <CardDescription>Selecione níveis cognitivos e gere questões com IA</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         {error && (
@@ -82,7 +82,7 @@ export function QuestionGenerator({ documentId }: QuestionGeneratorProps) {
         )}
 
         <div className="space-y-3">
-          <Label>Cognitive Levels (Bloom&apos;s Taxonomy)</Label>
+          <Label>Níveis Cognitivos (Taxonomia de Bloom)</Label>
           <div className="space-y-3">
             {levels.map((level) => (
               <div key={level} className="flex items-start gap-3 p-3 border rounded-lg">
@@ -106,7 +106,7 @@ export function QuestionGenerator({ documentId }: QuestionGeneratorProps) {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="count">Questions per Level</Label>
+          <Label htmlFor="count">Questões por Nível</Label>
           <Input
             id="count"
             type="number"
@@ -117,13 +117,13 @@ export function QuestionGenerator({ documentId }: QuestionGeneratorProps) {
             disabled={isGenerating}
           />
           <p className="text-sm text-muted-foreground">
-            Total: {selectedLevels.length * questionsPerLevel} questions will be generated
+            Total: {selectedLevels.length * questionsPerLevel} questões serão geradas
           </p>
         </div>
 
         <Button onClick={handleGenerate} disabled={isGenerating || selectedLevels.length === 0} className="w-full">
           {isGenerating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          {isGenerating ? "Generating..." : "Generate Questions"}
+          {isGenerating ? "Gerando..." : "Gerar Questões"}
         </Button>
       </CardContent>
     </Card>

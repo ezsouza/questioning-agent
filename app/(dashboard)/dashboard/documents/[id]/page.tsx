@@ -25,7 +25,7 @@ export default async function DocumentDetailPage({ params }: { params: Promise<{
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2">{document.name}</h1>
-        <p className="text-muted-foreground">Document details and question generation</p>
+        <p className="text-muted-foreground">Detalhes do documento e geração de questões</p>
       </div>
 
       <div className="grid gap-6">
@@ -33,30 +33,30 @@ export default async function DocumentDetailPage({ params }: { params: Promise<{
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <FileText className="h-5 w-5" />
-              Document Information
+              Informações do Documento
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div>
-                <p className="text-sm text-muted-foreground mb-1">Size</p>
+                <p className="text-sm text-muted-foreground mb-1">Tamanho</p>
                 <p className="font-medium">{(document.size / 1024 / 1024).toFixed(2)} MB</p>
               </div>
               <div>
-                <p className="text-sm text-muted-foreground mb-1">Type</p>
+                <p className="text-sm text-muted-foreground mb-1">Tipo</p>
                 <p className="font-medium">{document.type.split("/")[1]?.toUpperCase()}</p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground mb-1 flex items-center gap-1">
                   <Hash className="h-3 w-3" />
-                  Chunks
+                  Blocos
                 </p>
                 <p className="font-medium">{document._count.chunks}</p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground mb-1 flex items-center gap-1">
                   <Clock className="h-3 w-3" />
-                  Uploaded
+                  Enviado
                 </p>
                 <p className="font-medium">{formatDistanceToNow(new Date(document.createdAt), { addSuffix: true })}</p>
               </div>
@@ -72,8 +72,8 @@ export default async function DocumentDetailPage({ params }: { params: Promise<{
 
             <Card>
               <CardHeader>
-                <CardTitle>Generated Questions ({questions.length})</CardTitle>
-                <CardDescription>Review, edit, and export your generated questions</CardDescription>
+                <CardTitle>Questões Geradas ({questions.length})</CardTitle>
+                <CardDescription>Revise, edite e exporte suas questões geradas</CardDescription>
               </CardHeader>
               <CardContent>
                 <QuestionList questions={questions} />

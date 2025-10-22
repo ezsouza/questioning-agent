@@ -15,7 +15,7 @@ export default async function DashboardPage() {
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2">Dashboard</h1>
-        <p className="text-muted-foreground">Upload documents and generate questions</p>
+        <p className="text-muted-foreground">Envie documentos e gere questões</p>
       </div>
 
       <div className="grid gap-6 mb-8">
@@ -23,9 +23,9 @@ export default async function DashboardPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <FileText className="h-5 w-5" />
-              Upload Document
+              Enviar Documento
             </CardTitle>
-            <CardDescription>Upload PDF, DOCX, TXT, or Markdown files to generate questions (max 10MB)</CardDescription>
+            <CardDescription>Envie arquivos PDF, DOCX, TXT ou Markdown para gerar questões (máx. 10MB)</CardDescription>
           </CardHeader>
           <CardContent>
             <DocumentUpload />
@@ -34,8 +34,8 @@ export default async function DashboardPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Your Documents</CardTitle>
-            <CardDescription>Manage and generate questions from your uploaded documents</CardDescription>
+            <CardTitle>Seus Documentos</CardTitle>
+            <CardDescription>Gerencie e gere questões a partir dos seus documentos</CardDescription>
           </CardHeader>
           <CardContent>
             <DocumentList documents={documents} />

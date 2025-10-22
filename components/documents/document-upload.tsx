@@ -28,13 +28,13 @@ export function DocumentUpload() {
     const isValidType = Object.keys(SUPPORTED_FILE_TYPES).includes(fileType)
 
     if (!isValidType) {
-      setError("Invalid file type. Please upload PDF, DOCX, TXT, or Markdown files.")
+      setError("Tipo de arquivo inválido. Por favor, envie arquivos PDF, DOCX, TXT ou Markdown.")
       return
     }
 
     // Validate file size
     if (selectedFile.size > MAX_FILE_SIZE) {
-      setError("File size exceeds 10MB limit.")
+      setError("O tamanho do arquivo excede o limite de 10MB.")
       return
     }
 
@@ -79,7 +79,7 @@ export function DocumentUpload() {
 
       if (!response.ok) {
         const error = await response.json()
-        throw new Error(error.error || "Upload failed")
+        throw new Error(error.error || "Falha no envio")
       }
 
       const _result = await response.json()
@@ -94,7 +94,7 @@ export function DocumentUpload() {
       setFile(null)
       setUploadProgress(0)
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Upload failed")
+      setError(err instanceof Error ? err.message : "Falha no envio")
     } finally {
       setIsUploading(false)
     }
@@ -130,8 +130,8 @@ export function DocumentUpload() {
           />
           <label htmlFor="file-upload" className="cursor-pointer">
             <Upload className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-            <p className="text-lg font-medium mb-2">Drop your file here or click to browse</p>
-            <p className="text-sm text-muted-foreground">Supports PDF, DOCX, TXT, and Markdown (max 10MB)</p>
+            <p className="text-lg font-medium mb-2">Solte seu arquivo aqui ou clique para selecionar</p>
+            <p className="text-sm text-muted-foreground">Suporta PDF, DOCX, TXT e Markdown (máx. 10MB)</p>
           </label>
         </div>
       ) : (
@@ -152,13 +152,13 @@ export function DocumentUpload() {
           {isUploading && uploadProgress > 0 && (
             <div className="space-y-2">
               <Progress value={uploadProgress} />
-              <p className="text-sm text-muted-foreground text-center">{uploadProgress}% uploaded</p>
+              <p className="text-sm text-muted-foreground text-center">{uploadProgress}% enviado</p>
             </div>
           )}
 
           <Button onClick={handleUpload} disabled={isUploading} className="w-full">
             {isUploading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {isUploading ? "Uploading..." : "Upload Document"}
+            {isUploading ? "Enviando..." : "Enviar Documento"}
           </Button>
         </div>
       )}
