@@ -66,6 +66,7 @@
     "pdf-parse": "latest",
     "prisma": "latest",
     "react": "^19",
+    "react-cookie-consent": "^9.0.0",
     "react-dom": "^19",
     "swr": "^2.2.5",
     "tailwind-merge": "^2.5.5",

@@ -3,7 +3,9 @@ import type { Metadata } from "next"
 import { Geist, Geist_Mono } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import { Navbar } from "@/components/layout/navbar"
+import { Footer } from "@/components/layout/footer"
 import { getCurrentUser } from "@/lib/auth/session"
+import { CookieConsentBanner } from "@/components/cookie-consent"
 import "./globals.css"
 
 const _geist = Geist({ subsets: ["latin"] })
@@ -24,9 +26,11 @@ export default async function RootLayout({
   
   return (
     <html lang="pt-BR">
-      <body className={`font-sans antialiased`}>
+      <body className={`font-sans antialiased flex flex-col min-h-screen`}>
         <Navbar user={user} />
-        {children}
+        <main className="flex-1">{children}</main>
+        <Footer />
+        <CookieConsentBanner />
         <Analytics />
       </body>
     </html>
