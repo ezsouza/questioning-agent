@@ -168,6 +168,9 @@ DATABASE_URL=postgresql://user:password@host.neon.tech/database?sslmode=require
 BETTER_AUTH_SECRET=seu-secret-better-auth-aqui-min-32-chars
 BETTER_AUTH_URL=https://seu-dominio.vercel.app
 
+# Application
+NEXT_PUBLIC_URL=https://seu-dominio.vercel.app
+
 # IA
 OPENAI_API_KEY=sk-proj-xxxxxxxxxxxx
 GOOGLE_API_KEY=sua-chave-google-ai

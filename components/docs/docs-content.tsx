@@ -177,6 +177,9 @@ OPENAI_API_KEY="sk-..."
 BETTER_AUTH_SECRET="..." # minimum 32 characters
 BETTER_AUTH_URL="http://localhost:3000"
 
+# Application
+NEXT_PUBLIC_URL="http://localhost:3000"
+
 # Google OAuth (Social Provider)
 GOOGLE_CLIENT_ID="...apps.googleusercontent.com"
 GOOGLE_CLIENT_SECRET="..."`}
