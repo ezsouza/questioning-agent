@@ -45,13 +45,10 @@ export function UserNav({ user }: UserNavProps) {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56" align="end" forceMount>
-                  <DropdownMenuLabel>Minha Conta</DropdownMenuLabel>
+          <DropdownMenuLabel>Minha Conta</DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuItem asChild>
-            <Link href="/dashboard">Perfil</Link>
-          </DropdownMenuItem>
-          <DropdownMenuItem asChild>
-            <Link href="/dashboard">Configurações</Link>
+            <Link href="/profile" className="cursor-pointer">Perfil</Link>
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem
@@ -59,6 +56,7 @@ export function UserNav({ user }: UserNavProps) {
               await logout()
               window.location.href = "/login"
             }}
+            className="cursor-pointer"
           >
             Sair
           </DropdownMenuItem>
