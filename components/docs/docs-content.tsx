@@ -173,9 +173,13 @@ DATABASE_URL="postgresql://..."
 # OpenAI
 OPENAI_API_KEY="sk-..."
 
-# NextAuth
-NEXTAUTH_SECRET="..."
-NEXTAUTH_URL="http://localhost:3000"`}
+# Better Auth
+BETTER_AUTH_SECRET="..." # minimum 32 characters
+BETTER_AUTH_URL="http://localhost:3000"
+
+# Google OAuth (Social Provider)
+GOOGLE_CLIENT_ID="...apps.googleusercontent.com"
+GOOGLE_CLIENT_SECRET="..."`}
               </code>
             </pre>
           </CardContent>
@@ -422,6 +426,7 @@ q2,"...",analise,hard`}
                 <Badge className="text-xs">PostgreSQL</Badge>
                 <Badge className="text-xs">Prisma</Badge>
                 <Badge className="text-xs">pgvector</Badge>
+                <Badge className="text-xs">Better Auth</Badge>
               </div>
             </div>
 
@@ -429,7 +434,8 @@ q2,"...",analise,hard`}
               <h4 className="font-medium mb-2 text-sm sm:text-base">IA & ML</h4>
               <div className="flex flex-wrap gap-2">
                 <Badge className="text-xs">OpenAI GPT-4</Badge>
-                <Badge className="text-xs">LangChain</Badge>
+                <Badge className="text-xs">Google Gemini</Badge>
+                <Badge className="text-xs">Vercel AI SDK</Badge>
                 <Badge className="text-xs">text-embedding-3</Badge>
               </div>
             </div>
@@ -497,9 +503,10 @@ q2,"...",analise,hard`}
               <CardTitle className="text-base sm:text-lg">Autenticação</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2 text-sm">
-              <p>✓ JWT com tokens seguros</p>
+              <p>✓ Better Auth com sessões seguras</p>
+              <p>✓ Suporte a OAuth (Google)</p>
               <p>✓ Hashing de senhas com bcrypt</p>
-              <p>✓ Sessões protegidas</p>
+              <p>✓ Proteção CSRF e XSS</p>
             </CardContent>
           </Card>
 
@@ -511,6 +518,7 @@ q2,"...",analise,hard`}
               <p>✓ Criptografia em trânsito (HTTPS)</p>
               <p>✓ Isolamento de dados por usuário</p>
               <p>✓ Backups regulares</p>
+              <p>✓ Conformidade com LGPD</p>
             </CardContent>
           </Card>
         </div>

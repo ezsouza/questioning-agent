@@ -18,17 +18,17 @@ Este projeto foi desenvolvido como **Trabalho de Conclusão de Curso (TCC)** par
 - **Múltiplos Provedores**: Alternância entre OpenAI GPT e Google Gemini
 - **Estimativa de Dificuldade**: Classificação automática de complexidade
 - **Revisão e Exportação**: Edite questões e exporte para JSON/CSV
-- **Autenticação**: Sistema seguro com NextAuth.js
+- **Autenticação**: Sistema seguro com Better Auth + Google OAuth
 
 ## 🛠️ Stack Tecnológica
 
 - **Framework**: Next.js 15 (App Router) + TypeScript
 - **Estilização**: Tailwind CSS v4 + shadcn/ui
 - **Banco de Dados**: PostgreSQL + pgvector (Neon)
-- **ORM**: Prisma (opcional)
+- **ORM**: Prisma
 - **IA**: Vercel AI SDK com OpenAI e Google
 - **Armazenamento**: Vercel Blob
-- **Autenticação**: NextAuth.js v5
+- **Autenticação**: Better Auth
 - **Gerenciador de Pacotes**: pnpm
 
 ## 🚀 Começando
@@ -91,31 +91,54 @@ Acesse [http://localhost:3000](http://localhost:3000) para ver a aplicação.
 
 ## 📁 Estrutura do Projeto
 
-\`\`\`
+```
 questioning-agent/
 ├── app/                   # Next.js App Router
-│   ├── api/               # Rotas de API
 │   ├── (auth)/            # Páginas de autenticação
-│   ├── (dashboard)/       # Páginas do dashboard
+│   │   ├── login/         # Página de login
+│   │   └── register/      # Página de registro
+│   ├── (dashboard)/       # Páginas do dashboard (protegidas)
+│   │   ├── dashboard/     # Dashboard principal
+│   │   └── profile/       # Perfil do usuário
+│   ├── api/               # Rotas de API
+│   │   ├── auth/          # Autenticação (Better Auth)
+│   │   ├── documents/     # Gestão de documentos
+│   │   ├── generate/      # Geração de questões
+│   │   ├── ingest/        # Processamento de documentos
+│   │   ├── query/         # Consultas RAG
+│   │   ├── questions/     # CRUD de questões
+│   │   ├── upload/        # Upload de arquivos
+│   │   └── ...            # Outras rotas
 │   ├── contact/           # Página de contato
-│   └── docs/              # Documentação
+│   ├── docs/              # Documentação pública
+│   ├── privacy/           # Política de privacidade
+│   └── terms/             # Termos de uso
 ├── components/            # Componentes React
 │   ├── ui/                # Componentes shadcn/ui
 │   ├── auth/              # Componentes de autenticação
+│   ├── contact/           # Componentes de contato
+│   ├── docs/              # Componentes da documentação
 │   ├── documents/         # Componentes de documentos
 │   ├── questions/         # Componentes de questões
-│   ├── layout/            # Componentes de layout
-│   └── docs/              # Componentes da documentação
+│   ├── profile/           # Componentes de perfil
+│   ├── rag/               # Componentes RAG
+│   └── layout/            # Componentes de layout
 ├── lib/                   # Utilitários e configurações
 │   ├── ai/                # Integrações com provedores de IA
+│   ├── auth/              # Lógica de autenticação (Better Auth)
 │   ├── db/                # Utilitários do banco de dados
-│   ├── auth/              # Lógica de autenticação
 │   ├── processing/        # Pipeline de processamento
-│   └── rag/               # Lógica do pipeline RAG
+│   ├── rag/               # Lógica do pipeline RAG
+│   └── utils/             # Utilitários gerais
 ├── hooks/                 # Custom React hooks
+├── prisma/                # Schema e migrations do Prisma
+│   ├── schema.prisma      # Definição do schema
+│   └── migrations/        # Migrations do banco de dados
 ├── public/                # Arquivos estáticos
-└── scripts/               # Scripts do banco de dados
-\`\`\`
+├── scripts/               # Scripts do banco de dados
+├── styles/                # Estilos globais
+└── types/                 # Definições de tipos TypeScript
+```
 
 ## 🏗️ Decisões de Arquitetura
 
@@ -137,25 +160,28 @@ Todas as consultas e gerações são registradas com métricas de latência, cus
 
 Configure as seguintes variáveis no painel da Vercel (**Settings → Environment Variables**):
 
-\`\`\`env
-# Banco de Dados (OBRIGATÓRIO)
+```env
+# Banco de Dados
 DATABASE_URL=postgresql://user:password@host.neon.tech/database?sslmode=require
 
-# Autenticação (OBRIGATÓRIO)
-JWT_SECRET=seu-secret-jwt-aqui
-NEXTAUTH_SECRET=seu-secret-nextauth-aqui
-NEXTAUTH_URL=https://seu-dominio.vercel.app
+# Better Auth
+BETTER_AUTH_SECRET=seu-secret-better-auth-aqui-min-32-chars
+BETTER_AUTH_URL=https://seu-dominio.vercel.app
 
-# IA (OBRIGATÓRIO)
+# IA
 OPENAI_API_KEY=sk-proj-xxxxxxxxxxxx
+GOOGLE_API_KEY=sua-chave-google-ai
 
-# Storage (OBRIGATÓRIO)
+# Storage
 BLOB_READ_WRITE_TOKEN=vercel_blob_rw_xxxxxxxx
 
-# Opcional
-GOOGLE_API_KEY=sua-chave-google-ai
+# Google OAuth (Login Social)
+GOOGLE_CLIENT_ID=seu-google-client-id.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=seu-google-client-secret
+
+# Serviço de email
 RESEND_API_KEY=re_xxxxxxxxxx
-\`\`\`
+```
 
 ### Passos para Deploy
 
