@@ -1,7 +1,7 @@
 import { auth } from "./auth"
 import { headers } from "next/headers"
 
-const secret = new TextEncoder().encode(process.env.NEXTAUTH_SECRET || "your-secret-key-min-32-characters-long")
+const secret = new TextEncoder().encode(process.env.BETTER_AUTH_SECRET)
 
 export interface SessionPayload {
   userId: string

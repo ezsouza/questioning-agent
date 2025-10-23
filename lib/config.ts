@@ -29,10 +29,10 @@ export const config = {
     blobReadWriteToken: process.env.BLOB_READ_WRITE_TOKEN || "",
   },
 
-  // NextAuth Configuration
+  // Better Auth Configuration
   auth: {
-    secret: process.env.NEXTAUTH_SECRET || "",
-    url: process.env.NEXTAUTH_URL || "http://localhost:3000",
+    secret: process.env.BETTER_AUTH_SECRET || "",
+    url: process.env.BETTER_AUTH_URL || "http://localhost:3000",
   },
 
   // RAG Configuration
@@ -76,7 +76,7 @@ export function validateConfig() {
   }
 
   if (!config.auth.secret) {
-    errors.push("NEXTAUTH_SECRET is required")
+    errors.push("BETTER_AUTH_SECRET is required")
   }
 
   return { valid: errors.length === 0, errors }
