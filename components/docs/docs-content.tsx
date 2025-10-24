@@ -137,10 +137,12 @@ export function DocsContent() {
           <h2 className="text-2xl sm:text-3xl font-bold">Instalação</h2>
         </div>
 
-        <Alert>
+        <Card>
+          <CardHeader>
           <Terminal className="h-4 w-4 shrink-0" />
-          <AlertTitle className="text-sm sm:text-base">Configuração de Desenvolvimento</AlertTitle>
-          <AlertDescription className="mt-2">
+          <CardTitle className="text-sm sm:text-base">Configuração de Desenvolvimento</CardTitle>
+          </CardHeader>
+          <CardContent className="mt-2">
             <pre className="rounded-lg bg-muted p-3 sm:p-4 overflow-x-auto">
               <code className="text-xs sm:text-sm">
                 {`# Clone o repositório
@@ -156,8 +158,8 @@ cp .env.example .env
 pnpm dev`}
               </code>
             </pre>
-          </AlertDescription>
-        </Alert>
+          </CardContent>
+        </Card>
 
         <Card>
           <CardHeader>
