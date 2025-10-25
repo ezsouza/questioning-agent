@@ -26,7 +26,21 @@ export const config = {
 
   // Storage Configuration
   storage: {
-    blobReadWriteToken: process.env.BLOB_READ_WRITE_TOKEN || "",
+    provider: "r2" as const,
+    r2: {
+      accountId: process.env.R2_ACCOUNT_ID || "",
+      accessKeyId: process.env.R2_ACCESS_KEY_ID || "",
+      secretAccessKey: process.env.R2_SECRET_ACCESS_KEY || "",
+      bucketName: process.env.R2_BUCKET_NAME || "questioning-agent-storage",
+      publicUrl: process.env.R2_PUBLIC_URL || "",
+      endpoint: process.env.R2_ENDPOINT || "",
+      region: process.env.R2_REGION || "auto",
+    },
+    limits: {
+      maxFileSize: 10 * 1024 * 1024, // 10MB
+      maxAvatarSize: 5 * 1024 * 1024, // 5MB
+      userStorageLimit: 300 * 1024 * 1024, // 300MB
+    },
   },
 
   // Better Auth Configuration
@@ -77,6 +91,25 @@ export function validateConfig() {
 
   if (!config.auth.secret) {
     errors.push("BETTER_AUTH_SECRET is required")
+  }
+
+  // R2 Storage validation
+  if (config.storage.provider === "r2") {
+    if (!config.storage.r2.accountId) {
+      errors.push("R2_ACCOUNT_ID is required for Cloudflare R2")
+    }
+    if (!config.storage.r2.accessKeyId) {
+      errors.push("R2_ACCESS_KEY_ID is required for Cloudflare R2")
+    }
+    if (!config.storage.r2.secretAccessKey) {
+      errors.push("R2_SECRET_ACCESS_KEY is required for Cloudflare R2")
+    }
+    if (!config.storage.r2.bucketName) {
+      errors.push("R2_BUCKET_NAME is required for Cloudflare R2")
+    }
+    if (!config.storage.r2.endpoint) {
+      errors.push("R2_ENDPOINT is required for Cloudflare R2")
+    }
   }
 
   return { valid: errors.length === 0, errors }
