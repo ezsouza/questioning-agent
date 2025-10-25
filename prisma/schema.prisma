@@ -11,18 +11,22 @@ datasource db {
 }
 
 model User {
-  id            String     @id @default(dbgenerated("(gen_random_uuid())::text"))
+  id            String        @id @default(dbgenerated("(gen_random_uuid())::text"))
   name          String?
-  email         String     @unique
-  emailVerified Boolean    @default(false) @map("email_verified")
+  email         String        @unique
+  emailVerified Boolean       @default(false) @map("email_verified")
   image         String?
+  imageKey      String?       @map("image_key")
   password      String?
-  createdAt     DateTime   @default(now()) @map("created_at")
-  updatedAt     DateTime   @updatedAt @map("updated_at")
+  storageUsed   BigInt        @default(0) @map("storage_used")
+  storageLimit  BigInt        @default(314572800) @map("storage_limit")
+  createdAt     DateTime      @default(now()) @map("created_at")
+  updatedAt     DateTime      @updatedAt @map("updated_at")
   accounts      Account[]
   documents     Document[]
   questions     Question[]
   sessions      Session[]
+  storageAudit  StorageAudit[]
 
   @@map("users")
 }
@@ -81,11 +85,17 @@ model Document {
   name           String
   type           String
   size           Int
-  blobUrl        String            @map("blob_url")
+  blobUrl        String?           @map("blob_url")
+  r2Key          String?           @map("r2_key")
+  r2Bucket       String?           @map("r2_bucket")
+  contentType    String?           @map("content_type")
+  checksum       String?
+  metadata       Json?
   status         DocumentStatus    @default(UPLOADING)
   userId         String            @map("user_id")
   createdAt      DateTime          @default(now()) @map("created_at")
   updatedAt      DateTime          @updatedAt @map("updated_at")
+  deletedAt      DateTime?         @map("deleted_at")
   chunks         Chunk[]
   versions       DocumentVersion[]
   user           User              @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -95,6 +105,8 @@ model Document {
 
   @@index([userId])
   @@index([status])
+  @@index([r2Key])
+  @@index([deletedAt])
   @@map("documents")
 }
 
@@ -223,4 +235,21 @@ enum QuestionDifficulty {
   HARD
 
   @@map("question_difficulty")
+}
+
+model StorageAudit {
+  id            String   @id @default(dbgenerated("(gen_random_uuid())::text"))
+  userId        String   @map("user_id")
+  action        String
+  documentId    String?  @map("document_id")
+  fileName      String?  @map("file_name")
+  fileSize      BigInt   @map("file_size")
+  previousUsage BigInt   @map("previous_usage")
+  newUsage      BigInt   @map("new_usage")
+  createdAt     DateTime @default(now()) @map("created_at")
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([createdAt])
+  @@map("storage_audit")
 }
