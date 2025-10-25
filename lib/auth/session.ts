@@ -1,10 +1,13 @@
 import { auth } from "./auth"
 import { headers } from "next/headers"
+import prisma from "@/lib/db/prisma"
 
 export interface SessionUser {
   id: string
   email: string
   name: string
+  image?: string | null
+  imageKey?: string | null
 }
 
 export interface Session {
@@ -26,11 +29,23 @@ export async function getSession(): Promise<Session | null> {
       return null
     }
 
+    // Fetch fresh user data from database to get updated image
+    const dbUser = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { id: true, email: true, name: true, image: true, imageKey: true },
+    })
+
+    if (!dbUser) {
+      return null
+    }
+
     return {
       user: {
-        id: session.user.id,
-        email: session.user.email,
-        name: session.user.name || "",
+        id: dbUser.id,
+        email: dbUser.email,
+        name: dbUser.name || "",
+        image: dbUser.image,
+        imageKey: dbUser.imageKey,
       },
       expires: new Date(session.session.expiresAt).toISOString(),
     }
