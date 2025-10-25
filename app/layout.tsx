@@ -17,6 +17,10 @@ export const metadata: Metadata = {
   generator: "v0.app",
 }
 
+// Disable caching to always fetch fresh user data
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 export default async function RootLayout({
   children,
 }: Readonly<{
