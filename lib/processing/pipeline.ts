@@ -2,7 +2,8 @@ import { extractText } from "./extractors"
 import { chunkText } from "./chunker"
 import { generateEmbeddings } from "@/lib/ai/embeddings"
 import { createChunks, createEmbedding, updateDocumentStatus } from "@/lib/db/queries"
-import prisma from "@/lib/db"
+import { downloadFromR2 } from "@/lib/storage/r2-client"
+import prisma from "@/lib/db/prisma"
 import { config } from "@/lib/config"
 
 /**
@@ -33,14 +34,13 @@ export async function processDocument(documentId: string): Promise<ProcessingRes
       throw new Error("Document not found")
     }
 
-    // Download file from blob
-    const response = await fetch(document.blobUrl)
-    if (!response.ok) {
-      throw new Error("Failed to download document from blob storage")
+    // Download file from R2
+    if (!document.r2Key) {
+      throw new Error("Document has no R2 storage key")
     }
 
-    const arrayBuffer = await response.arrayBuffer()
-    const buffer = Buffer.from(arrayBuffer)
+    console.log(`[PROCESSING] Downloading from R2: ${document.r2Key}`)
+    const buffer = await downloadFromR2(document.r2Key)
 
     // Extract text
     console.log(`[PROCESSING] Extracting text from ${document.name}`)
