@@ -5,7 +5,9 @@ import { formatDistanceToNow } from "date-fns"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { FileText, Loader2, CheckCircle2, AlertCircle } from "lucide-react"
-import type { DocumentStatus } from "@prisma/client"
+import { formatBytes } from "@/lib/storage/quota"
+
+type DocumentStatus = "UPLOADING" | "PROCESSING" | "INDEXED" | "FAILED"
 
 interface Document {
   id: string
@@ -53,7 +55,7 @@ export function DocumentList({ documents }: DocumentListProps) {
             key={doc.id}
             className="flex items-center gap-4 p-4 border rounded-lg hover:bg-muted/50 transition-colors"
           >
-            <FileText className="h-8 w-8 text-primary flex-shrink-0" />
+            <FileText className="h-8 w-8 text-primary shrink-0" />
 
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
@@ -64,7 +66,7 @@ export function DocumentList({ documents }: DocumentListProps) {
                 </Badge>
               </div>
               <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                <span>{(doc.size / 1024 / 1024).toFixed(2)} MB</span>
+                <span>{formatBytes(doc.size)}</span>
                 {doc.status === "INDEXED" && (
                   <>
                     <span>{doc._count.chunks} blocos</span>
