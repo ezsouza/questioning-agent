@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast"
+import { useAvatarUrl } from "@/hooks/use-avatar-url"
 import { Upload, Loader2, X } from "lucide-react"
 
 interface ProfileFormProps {
@@ -15,6 +16,7 @@ interface ProfileFormProps {
     name?: string | null
     email?: string | null
     image?: string | null
+    imageKey?: string | null
   }
 }
 
@@ -23,9 +25,11 @@ export function ProfileForm({ user }: ProfileFormProps) {
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
   const [name, setName] = useState(user.name || "")
-  const [image, setImage] = useState(user.image || "")
   const [imageFile, setImageFile] = useState<File | null>(null)
-  const [imagePreview, setImagePreview] = useState(user.image || "")
+  const [localImagePreview, setLocalImagePreview] = useState<string | null>(null)
+
+  // Use avatar URL hook for automatic renewal
+  const { url: avatarUrl, isRenewing } = useAvatarUrl(user.image, user.imageKey)
 
   const initials =
     user.name
@@ -49,7 +53,7 @@ export function ProfileForm({ user }: ProfileFormProps) {
       setImageFile(file)
       const reader = new FileReader()
       reader.onloadend = () => {
-        setImagePreview(reader.result as string)
+        setLocalImagePreview(reader.result as string)
       }
       reader.readAsDataURL(file)
     }
@@ -57,8 +61,7 @@ export function ProfileForm({ user }: ProfileFormProps) {
 
   const handleRemoveImage = () => {
     setImageFile(null)
-    setImagePreview("")
-    setImage("")
+    setLocalImagePreview(null)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -66,7 +69,7 @@ export function ProfileForm({ user }: ProfileFormProps) {
     setIsLoading(true)
 
     try {
-      let uploadedImageUrl = image
+      let uploadedImageUrl = user.image
 
       // Upload da imagem se houver arquivo novo
       if (imageFile) {
@@ -107,7 +110,8 @@ export function ProfileForm({ user }: ProfileFormProps) {
         description: "Perfil atualizado com sucesso",
       })
 
-      router.refresh()
+      // Force full page reload to update session and navbar with new avatar
+      window.location.reload()
     } catch (error) {
       toast({
         title: "Erro",
@@ -119,20 +123,33 @@ export function ProfileForm({ user }: ProfileFormProps) {
     }
   }
 
+  // Use local preview if available, otherwise use avatar URL from hook
+  const displayImageUrl = localImagePreview || avatarUrl
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Foto de Perfil */}
       <div className="flex items-start gap-6">
         <div className="relative">
           <Avatar className="h-24 w-24">
-            <AvatarImage src={imagePreview || undefined} alt={name || "User"} />
+            {isRenewing && (
+              <div className="absolute inset-0 flex items-center justify-center bg-background/50 rounded-full z-10">
+                <div className="h-6 w-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+              </div>
+            )}
+            <AvatarImage 
+              src={displayImageUrl || undefined} 
+              alt={name || "User"}
+              referrerPolicy="no-referrer"
+              crossOrigin="anonymous"
+            />
             <AvatarFallback className="text-2xl">{initials}</AvatarFallback>
           </Avatar>
-          {imagePreview && (
+          {displayImageUrl && (
             <button
               type="button"
               onClick={handleRemoveImage}
-              className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1 hover:bg-destructive/90 transition-colors"
+              className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1 hover:bg-destructive/90 transition-colors z-20"
             >
               <X className="h-4 w-4" />
             </button>
