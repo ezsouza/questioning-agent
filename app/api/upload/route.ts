@@ -1,9 +1,10 @@
 export const dynamic = "force-dynamic"
 
 import { NextResponse } from "next/server"
-import { put } from "@vercel/blob"
+import { uploadToR2 } from "@/lib/storage/r2-client"
+import { checkStorageQuota, incrementStorageUsage, StorageQuotaError } from "@/lib/storage/quota"
 import { getCurrentUser } from "@/lib/auth/session"
-import prisma from "@/lib/db"
+import prisma from "@/lib/db/prisma"
 import { SUPPORTED_FILE_TYPES, MAX_FILE_SIZE } from "@/lib/constants"
 
 export async function POST(request: Request) {
@@ -31,10 +32,30 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "File size exceeds 10MB limit" }, { status: 400 })
     }
 
-    // Upload to Vercel Blob
-    const blob = await put(file.name, file, {
-      access: "public",
-      addRandomSuffix: true,
+    // Check storage quota
+    const quotaCheck = await checkStorageQuota(user.id, file.size)
+    if (!quotaCheck.allowed) {
+      return NextResponse.json(
+        {
+          error: "Storage quota exceeded",
+          details: {
+            used: quotaCheck.used,
+            limit: quotaCheck.limit,
+            required: file.size,
+            available: quotaCheck.available,
+          },
+        },
+        { status: 413 }
+      )
+    }
+
+    // Upload to Cloudflare R2
+    const uploadResult = await uploadToR2(file, {
+      fileName: file.name,
+      fileType: file.type,
+      fileSize: file.size,
+      userId: user.id,
+      folder: "documents",
     })
 
     // Create document record
@@ -43,10 +64,20 @@ export async function POST(request: Request) {
         name: file.name,
         type: file.type,
         size: file.size,
-        blobUrl: blob.url,
+        blobUrl: uploadResult.url,
+        r2Key: uploadResult.key,
+        r2Bucket: uploadResult.bucket,
+        contentType: uploadResult.contentType,
+        checksum: uploadResult.checksum,
         status: "UPLOADING",
         userId: user.id,
       },
+    })
+
+    // Increment storage usage
+    await incrementStorageUsage(user.id, file.size, {
+      documentId: document.id,
+      fileName: file.name,
     })
 
     // Trigger processing in the background
@@ -66,12 +97,29 @@ export async function POST(request: Request) {
           id: document.id,
           name: document.name,
           status: document.status,
+          size: document.size,
         },
       },
       { status: 201 },
     )
   } catch (error) {
     console.error("[UPLOAD_ERROR]", error)
+
+    // Handle storage quota errors
+    if (error instanceof StorageQuotaError) {
+      return NextResponse.json(
+        {
+          error: error.message,
+          details: {
+            used: error.used,
+            limit: error.limit,
+            required: error.required,
+          },
+        },
+        { status: 413 }
+      )
+    }
+
     return NextResponse.json({ error: "Upload failed" }, { status: 500 })
   }
 }

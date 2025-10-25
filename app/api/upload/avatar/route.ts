@@ -1,17 +1,28 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getCurrentUser } from "@/lib/auth/session"
-import { put } from "@vercel/blob"
-import { z } from "zod"
+import { uploadToR2, deleteFromR2 } from "@/lib/storage/r2-client"
+import prisma from "@/lib/db/prisma"
+import { config } from "@/lib/config"
 
-const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB
+const MAX_FILE_SIZE = config.storage.limits.maxAvatarSize // 5MB
 const ALLOWED_FILE_TYPES = ["image/jpeg", "image/png", "image/gif", "image/webp"]
 
 export async function POST(request: NextRequest) {
   try {
-    const user = await getCurrentUser()
+    const sessionUser = await getCurrentUser()
+
+    if (!sessionUser) {
+      return NextResponse.json({ error: "Não autorizado" }, { status: 401 })
+    }
+
+    // Buscar usuário completo do banco para acessar imageKey
+    const user = await prisma.user.findUnique({
+      where: { id: sessionUser.id },
+      select: { id: true, imageKey: true },
+    })
 
     if (!user) {
-      return NextResponse.json({ error: "Não autorizado" }, { status: 401 })
+      return NextResponse.json({ error: "Usuário não encontrado" }, { status: 404 })
     }
 
     const formData = await request.formData()
@@ -40,16 +51,39 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Upload para Vercel Blob
-    const blob = await put(`avatars/${user.id}-${Date.now()}.${file.type.split("/")[1]}`, file, {
-      access: "public",
-      addRandomSuffix: true,
+    // Deletar avatar antigo do R2, se existir
+    if (user.imageKey) {
+      try {
+        await deleteFromR2(user.imageKey)
+      } catch (error) {
+        console.warn("Erro ao deletar avatar antigo:", error)
+        // Não bloquear o upload se a exclusão falhar
+      }
+    }
+
+    // Upload para Cloudflare R2
+    const uploadResult = await uploadToR2(file, {
+      fileName: file.name,
+      fileType: file.type,
+      fileSize: file.size,
+      userId: user.id,
+      folder: "avatars",
+    })
+
+    // Atualizar imageKey do usuário no banco
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        image: uploadResult.url,
+        imageKey: uploadResult.key,
+      },
     })
 
     return NextResponse.json({
-      url: blob.url,
+      url: uploadResult.url,
       size: file.size,
       type: file.type,
+      key: uploadResult.key,
     })
   } catch (error) {
     console.error("Error uploading avatar:", error)
