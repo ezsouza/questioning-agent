@@ -17,6 +17,7 @@ import {
   AlertCircle,
   CheckCircle2,
   Terminal,
+  HardDrive,
 } from 'lucide-react'
 import Link from 'next/link'
 
@@ -172,8 +173,9 @@ pnpm dev`}
                 {`# Database
 DATABASE_URL="postgresql://..."
 
-# OpenAI
+# IA - OpenAI ou Google Gemini
 OPENAI_API_KEY="sk-..."
+GOOGLE_API_KEY="AIzaSyB-..."
 
 # Better Auth
 BETTER_AUTH_SECRET="..." # minimum 32 characters
@@ -181,6 +183,14 @@ BETTER_AUTH_URL="http://localhost:3000"
 
 # Application
 NEXT_PUBLIC_URL="http://localhost:3000"
+
+# Cloudflare R2 Storage (300MB/usuário)
+R2_ACCOUNT_ID="your-account-id"
+R2_ACCESS_KEY_ID="your-access-key"
+R2_SECRET_ACCESS_KEY="your-secret-key"
+R2_BUCKET_NAME="questioning-agent-storage"
+R2_PUBLIC_URL="https://pub-xxxxx.r2.dev"
+R2_ENDPOINT="https://account-id.r2.cloudflarestorage.com"
 
 # Google OAuth (Social Provider)
 GOOGLE_CLIENT_ID="...apps.googleusercontent.com"
@@ -238,9 +248,9 @@ GOOGLE_CLIENT_SECRET="..."`}
             </CardHeader>
             <CardContent>
               <ul className="space-y-2 text-sm text-muted-foreground">
-                <li>Tamanho máximo: 10 MB</li>
-                <li>Páginas: Até 100 páginas</li>
-                <li>Processamento: ~30 segundos</li>
+                <li>✓ Tamanho máximo por arquivo: 10MB</li>
+                <li>✓ Storage por usuário: 300MB (Cloudflare R2)</li>
+                <li>✓ Processamento: ~30 segundos por documento</li>
               </ul>
             </CardContent>
           </Card>
@@ -251,6 +261,60 @@ GOOGLE_CLIENT_SECRET="..."`}
           <AlertTitle className="text-sm sm:text-base">Dica</AlertTitle>
           <AlertDescription className="text-sm">
             Para melhores resultados, use documentos bem estruturados com títulos e seções claras.
+          </AlertDescription>
+        </Alert>
+      </section>
+
+      <Separator />
+
+      {/* Armazenamento */}
+      <section id="armazenamento" className="scroll-mt-20 space-y-4">
+        <div className="flex items-center gap-3">
+          <HardDrive className="h-5 w-5 sm:h-6 sm:w-6 text-primary shrink-0" />
+          <h2 className="text-2xl sm:text-3xl font-bold">Armazenamento</h2>
+        </div>
+
+        <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
+          O sistema utiliza <strong>Cloudflare R2</strong> para armazenamento de documentos e avatares, 
+          oferecendo 300MB gratuitos por usuário com URLs seguras e renovação automática.
+        </p>
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base sm:text-lg">Cloudflare R2</CardTitle>
+              <CardDescription className="text-sm">Armazenamento S3-compatible com egress gratuito</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-2 text-sm">
+              <p>✓ <strong>300MB</strong> por usuário</p>
+              <p>✓ URLs assinadas com expiração segura</p>
+              <p>✓ Renovação automática de URLs</p>
+              <p>✓ Auditoria de storage</p>
+              <p>✓ Soft delete para recuperação</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base sm:text-lg">Segurança de URLs</CardTitle>
+              <CardDescription className="text-sm">Sistema inteligente de gerenciamento de acesso</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-2 text-sm">
+              <p>• Avatars: 24 horas de validade</p>
+              <p>• Documentos: 1 hora de validade</p>
+              <p>• Limite máximo: 7 dias</p>
+              <p>• Renovação 5 min antes de expirar</p>
+              <p>• Cache inteligente client-side</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        <Alert>
+          <Shield className="h-4 w-4 shrink-0" />
+          <AlertTitle className="text-sm sm:text-base">Controle de Quota</AlertTitle>
+          <AlertDescription className="text-sm">
+            O sistema monitora automaticamente o uso de storage e impede uploads quando o limite de 300MB é atingido. 
+            Você pode visualizar seu uso em tempo real no dashboard.
           </AlertDescription>
         </Alert>
       </section>

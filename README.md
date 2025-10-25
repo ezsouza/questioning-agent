@@ -26,8 +26,8 @@ Este projeto foi desenvolvido como **Trabalho de Conclusão de Curso (TCC)** par
 - **Estilização**: Tailwind CSS v4 + shadcn/ui
 - **Banco de Dados**: PostgreSQL + pgvector (Neon)
 - **ORM**: Prisma
-- **IA**: Vercel AI SDK com OpenAI e Google
-- **Armazenamento**: Vercel Blob
+- **IA**: Vercel AI SDK com OpenAI e Google Gemini
+- **Armazenamento**: Cloudflare R2 (300MB/usuário)
 - **Autenticação**: Better Auth
 - **Gerenciador de Pacotes**: pnpm
 
@@ -38,6 +38,7 @@ Este projeto foi desenvolvido como **Trabalho de Conclusão de Curso (TCC)** par
 - Node.js 18+ e pnpm
 - PostgreSQL com extensão pgvector
 - Chave de API OpenAI e/ou Google AI
+- Conta Cloudflare R2 (grátis para 10GB)
 
 ### Instalação Local
 
@@ -72,7 +73,23 @@ CREATE EXTENSION IF NOT EXISTS vector;
 psql postgresql://sua-connection-string -f scripts/init-database.sql
 \`\`\`
 
-5. Inicie o servidor de desenvolvimento:
+5. Configure o Cloudflare R2:
+
+\`\`\`bash
+# 1. Crie uma conta no Cloudflare (grátis)
+# 2. Vá em R2 → Create Bucket
+# 3. Nome do bucket: questioning-agent-storage
+# 4. Gere API tokens em "Manage R2 API Tokens"
+# 5. Adicione as credenciais no .env:
+R2_ACCOUNT_ID="your-account-id"
+R2_ACCESS_KEY_ID="your-access-key"
+R2_SECRET_ACCESS_KEY="your-secret-key"
+R2_BUCKET_NAME="questioning-agent-storage"
+R2_PUBLIC_URL="https://pub-xxxxx.r2.dev"
+R2_ENDPOINT="https://account-id.r2.cloudflarestorage.com"
+\`\`\`
+
+6. Inicie o servidor de desenvolvimento:
 
 \`\`\`bash
 pnpm dev
@@ -171,12 +188,18 @@ BETTER_AUTH_URL=https://seu-dominio.vercel.app
 # Application
 NEXT_PUBLIC_URL=https://seu-dominio.vercel.app
 
-# IA
+# IA - OpenAI e/ou Google Gemini
 OPENAI_API_KEY=sk-proj-xxxxxxxxxxxx
 GOOGLE_API_KEY=sua-chave-google-ai
 
-# Storage
-BLOB_READ_WRITE_TOKEN=vercel_blob_rw_xxxxxxxx
+# Cloudflare R2 Storage (300MB/usuário)
+R2_ACCOUNT_ID=your-cloudflare-account-id
+R2_ACCESS_KEY_ID=your-r2-access-key-id
+R2_SECRET_ACCESS_KEY=your-r2-secret-access-key
+R2_BUCKET_NAME=questioning-agent-storage
+R2_PUBLIC_URL=https://pub-xxxxx.r2.dev
+R2_ENDPOINT=https://account-id.r2.cloudflarestorage.com
+R2_REGION=auto
 
 # Google OAuth (Login Social)
 GOOGLE_CLIENT_ID=seu-google-client-id.apps.googleusercontent.com
@@ -189,11 +212,22 @@ RESEND_API_KEY=re_xxxxxxxxxx
 ### Passos para Deploy
 
 1. Conecte seu repositório GitHub à Vercel
-2. Configure as variáveis de ambiente
+2. Configure as variáveis de ambiente (veja acima)
 3. Crie um banco de dados PostgreSQL no [Neon](https://neon.tech)
-4. Execute o script SQL de inicialização no banco
-5. Configure o Vercel Blob Storage
+4. Crie um bucket R2 no Cloudflare:
+   - Acesse [Cloudflare Dashboard](https://dash.cloudflare.com)
+   - Vá em R2 → Create Bucket
+   - Nome: `questioning-agent-storage`
+   - Configure public access para URLs públicas
+   - Gere API tokens com permissões de Read & Write
+5. Execute o script SQL de inicialização no banco
 6. Deploy! 🚀
+
+## 📚 Documentação Adicional
+
+- **[R2 Migration Plan](./docs/R2_MIGRATION_PLAN.md)** - Plano completo de migração para R2
+- **[Signed URL Management](./docs/SIGNED_URL_MANAGEMENT.md)** - Sistema de URLs seguras
+- **[R2 Public Access Setup](./docs/R2_PUBLIC_ACCESS_SETUP.md)** - Configuração de acesso público
 
 ## 📄 Licença
 
