@@ -27,6 +27,7 @@ export function ProfileForm({ user }: ProfileFormProps) {
   const [name, setName] = useState(user.name || "")
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [localImagePreview, setLocalImagePreview] = useState<string | null>(null)
+  const [imageRemoved, setImageRemoved] = useState(false)
 
   // Use avatar URL hook for automatic renewal
   const { url: avatarUrl, isRenewing } = useAvatarUrl(user.image, user.imageKey)
@@ -62,6 +63,7 @@ export function ProfileForm({ user }: ProfileFormProps) {
   const handleRemoveImage = () => {
     setImageFile(null)
     setLocalImagePreview(null)
+    setImageRemoved(true)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -71,7 +73,7 @@ export function ProfileForm({ user }: ProfileFormProps) {
     try {
       let uploadedImageUrl = user.image
 
-      // Upload da imagem se houver arquivo novo
+      // Upload new image if there is a new file
       if (imageFile) {
         const formData = new FormData()
         formData.append("file", imageFile)
@@ -87,6 +89,9 @@ export function ProfileForm({ user }: ProfileFormProps) {
 
         const uploadData = await uploadResponse.json()
         uploadedImageUrl = uploadData.url
+      } else if (imageRemoved) {
+        // Set null to delete image from R2 if it was removed
+        uploadedImageUrl = null
       }
 
       // Atualizar perfil
@@ -97,7 +102,7 @@ export function ProfileForm({ user }: ProfileFormProps) {
         },
         body: JSON.stringify({
           name,
-          image: uploadedImageUrl || null,
+          image: uploadedImageUrl,
         }),
       })
 
@@ -124,7 +129,8 @@ export function ProfileForm({ user }: ProfileFormProps) {
   }
 
   // Use local preview if available, otherwise use avatar URL from hook
-  const displayImageUrl = localImagePreview || avatarUrl
+  // Don't show avatar if it was explicitly removed
+  const displayImageUrl = imageRemoved ? null : (localImagePreview || avatarUrl)
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -149,9 +155,10 @@ export function ProfileForm({ user }: ProfileFormProps) {
             <button
               type="button"
               onClick={handleRemoveImage}
-              className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1 hover:bg-destructive/90 transition-colors z-20"
+              className="absolute -top-2 -right-2 bg-background border-2 border-border hover:border-primary rounded-full p-1 hover:bg-muted transition-colors z-20 cursor-pointer shadow-sm"
+              aria-label="Remover imagem"
             >
-              <X className="h-4 w-4" />
+              <X className="h-4 w-4 text-foreground" />
             </button>
           )}
         </div>
