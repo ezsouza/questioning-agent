@@ -151,7 +151,7 @@ export function ProfileForm({ user }: ProfileFormProps) {
             />
             <AvatarFallback className="text-2xl">{initials}</AvatarFallback>
           </Avatar>
-          {displayImageUrl && (
+          {displayImageUrl ? (
             <button
               type="button"
               onClick={handleRemoveImage}
@@ -160,7 +160,7 @@ export function ProfileForm({ user }: ProfileFormProps) {
             >
               <X className="h-4 w-4 text-foreground" />
             </button>
-          )}
+          ) : null}
         </div>
         <div className="flex-1 space-y-2">
           <Label htmlFor="avatar" className="text-base">
