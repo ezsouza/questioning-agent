@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import { useState } from "react"
 import { logout } from "@/lib/auth/actions"
 import { Button } from "@/components/ui/button"
 import {
@@ -34,6 +35,9 @@ export function UserNav({ user }: UserNavProps) {
 
   // Use avatar URL hook for automatic renewal
   const { url: avatarUrl, isRenewing } = useAvatarUrl(user.image, user.imageKey)
+    // Estado para abrir popup de configurações
+    const [settingsOpen, setSettingsOpen] = useState(false)
+    const SettingsPopup = typeof window !== "undefined" ? require("@/components/settings/settings-popup").default : null
 
   async function handleLogout() {
     await logout()
@@ -65,6 +69,12 @@ export function UserNav({ user }: UserNavProps) {
           <DropdownMenuItem asChild>
             <Link href="/profile" className="cursor-pointer">Perfil</Link>
           </DropdownMenuItem>
+          <DropdownMenuItem
+              onClick={() => setSettingsOpen(true)}
+              className="cursor-pointer"
+            >
+              Configurações
+          </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem
             onClick={async () => {
@@ -76,6 +86,9 @@ export function UserNav({ user }: UserNavProps) {
             Sair
           </DropdownMenuItem>
       </DropdownMenuContent>
+        {SettingsPopup && (
+          <SettingsPopup open={settingsOpen} onOpenChange={setSettingsOpen} />
+        )}
     </DropdownMenu>
   )
 }
