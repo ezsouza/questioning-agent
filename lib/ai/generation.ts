@@ -2,7 +2,6 @@ import { openai } from "@ai-sdk/openai"
 import { google } from "@ai-sdk/google"
 import { generateText } from "ai"
 import { config } from "@/lib/config"
-import type { CognitiveLevel } from "@prisma/client"
 
 /**
  * Question generation utilities
@@ -12,14 +11,17 @@ export interface GenerationOptions {
   provider?: "openai" | "google"
   temperature?: number
   maxRetries?: number
+  purpose?: "CREATION" | "EVALUATION"
+  includeAnswers?: boolean
 }
 
 export interface GeneratedQuestion {
   text: string
-  level: CognitiveLevel
+  level: string
   difficulty: "EASY" | "MEDIUM" | "HARD"
   evidence: string[]
   reasoning?: string
+  answer?: string
 }
 
 const COGNITIVE_LEVEL_PROMPTS = {
@@ -33,14 +35,16 @@ const COGNITIVE_LEVEL_PROMPTS = {
 
 export async function generateQuestions(
   context: string,
-  level: CognitiveLevel,
+  level: string,
   count: number,
   options: GenerationOptions = {},
 ): Promise<GeneratedQuestion[]> {
   const provider = options.provider || config.ai.provider
   const temperature = options.temperature || config.generation.temperature
+  const purpose = options.purpose || "EVALUATION"
+  const includeAnswers = options.includeAnswers || false
 
-  const prompt = buildPrompt(context, level, count)
+  const prompt = buildPrompt(context, level, count, purpose, includeAnswers)
 
   try {
     const model = provider === "openai" ? openai(config.ai.openai.model) : google(config.ai.google.model)
@@ -59,8 +63,16 @@ export async function generateQuestions(
   }
 }
 
-function buildPrompt(context: string, level: CognitiveLevel, count: number): string {
-  const levelDescription = COGNITIVE_LEVEL_PROMPTS[level]
+function buildPrompt(context: string, level: string, count: number, purpose: string = "EVALUATION", includeAnswers: boolean = false): string {
+  const levelDescription = COGNITIVE_LEVEL_PROMPTS[level as keyof typeof COGNITIVE_LEVEL_PROMPTS] || COGNITIVE_LEVEL_PROMPTS.UNDERSTAND
+
+  const purposeContext = purpose === "CREATION" 
+    ? "These questions should help develop and expand the document, encouraging brainstorming and creative thinking."
+    : "These questions should test comprehension and knowledge, suitable for an evaluation or exam."
+
+  const answerInstruction = includeAnswers
+    ? '\n7. Include a concise answer for each question in an "answer" field'
+    : "\n7. DO NOT include answers in the questions"
 
   return `You are an expert educational content creator specializing in Bloom's Taxonomy.
 
@@ -71,13 +83,15 @@ Task: Generate ${count} high-quality questions at the "${level}" cognitive level
 
 Level Description: ${levelDescription}
 
+Purpose: ${purposeContext}
+
 Requirements:
 1. Questions must be based ONLY on the provided context
 2. Questions should be clear, specific, and unambiguous
-3. DO NOT include answers in the questions
-4. Each question should cite specific evidence from the context
-5. Vary the difficulty (easy, medium, hard) across questions
-6. Questions should be appropriate for the ${level} level
+3. Each question should cite specific evidence from the context
+4. Vary the difficulty (easy, medium, hard) across questions
+5. Questions should be appropriate for the ${level} level
+6. Consider the ${purpose} purpose when crafting questions${answerInstruction}
 
 Output Format (JSON):
 [
@@ -85,14 +99,14 @@ Output Format (JSON):
     "text": "The question text here?",
     "difficulty": "EASY|MEDIUM|HARD",
     "evidence": ["Quote from context that supports this question", "Another relevant quote"],
-    "reasoning": "Brief explanation of why this question fits the ${level} level"
+    "reasoning": "Brief explanation of why this question fits the ${level} level"${includeAnswers ? ',\n    "answer": "The answer to this question"' : ""}
   }
 ]
 
 Generate exactly ${count} questions in valid JSON format:`
 }
 
-function parseQuestions(response: string, level: CognitiveLevel): GeneratedQuestion[] {
+function parseQuestions(response: string, level: string): GeneratedQuestion[] {
   try {
     // Extract JSON from response (handle markdown code blocks)
     const jsonMatch = response.match(/\[[\s\S]*\]/)
@@ -112,6 +126,7 @@ function parseQuestions(response: string, level: CognitiveLevel): GeneratedQuest
       difficulty: q.difficulty || "MEDIUM",
       evidence: Array.isArray(q.evidence) ? q.evidence : [],
       reasoning: q.reasoning,
+      answer: q.answer,
     }))
   } catch (error) {
     console.error("[PARSE_ERROR]", error)

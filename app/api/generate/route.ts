@@ -6,12 +6,15 @@ import { getCurrentUser } from "@/lib/auth/session"
 import { getDocumentById, createQuestion, logGeneration } from "@/lib/db/queries"
 import { retrieveContext, formatContextForPrompt, extractEvidenceFromChunks } from "@/lib/rag/retrieval"
 import { generateQuestions } from "@/lib/ai/generation"
-import type { CognitiveLevel } from "@prisma/client"
+import { generateDocumentEmbeddings } from "@/lib/processing/embeddings-pipeline"
+import prisma from "@/lib/db/prisma"
 
 const generateSchema = z.object({
   documentId: z.string().uuid(),
   levels: z.array(z.enum(["REMEMBER", "UNDERSTAND", "APPLY", "ANALYZE", "EVALUATE", "CREATE"])),
   questionsPerLevel: z.number().int().positive().max(10).default(3),
+  purpose: z.enum(["CREATION", "EVALUATION"]).default("EVALUATION"),
+  includeAnswers: z.boolean().default(false),
   provider: z.enum(["openai", "google"]).optional(),
 })
 
@@ -25,7 +28,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json()
-    const { documentId, levels, questionsPerLevel, provider } = generateSchema.parse(body)
+    const { documentId, levels, questionsPerLevel, purpose, includeAnswers, provider } = generateSchema.parse(body)
 
     // Verify document ownership
     const document = await getDocumentById(documentId)
@@ -33,25 +36,55 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Document not found" }, { status: 404 })
     }
 
-    if (document.userId !== user.id) {
+    if (document.user_id !== user.id) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 
-    if (document.status !== "INDEXED") {
-      return NextResponse.json({ error: "Document is not indexed yet" }, { status: 400 })
+    // Check if document has chunks
+    const chunkCount = await prisma.chunk.count({
+      where: { documentId }
+    })
+
+    if (chunkCount === 0) {
+      return NextResponse.json(
+        { error: "Document not prepared yet. Please process the document first." },
+        { status: 400 }
+      )
+    }
+
+    // Check if embeddings exist, generate if needed
+    const embeddingCount = await prisma.embedding.count({
+      where: {
+        chunk: {
+          documentId
+        }
+      }
+    })
+
+    if (embeddingCount === 0) {
+      // Generate embeddings for all chunks
+      const embeddingsResult = await generateDocumentEmbeddings(documentId, provider)
+      
+      if (!embeddingsResult.success) {
+        return NextResponse.json(
+          { error: "Failed to generate embeddings for document chunks" },
+          { status: 500 }
+        )
+      }
     }
 
     const allQuestions: Array<{
       text: string
-      level: CognitiveLevel
+      level: string
       difficulty: "EASY" | "MEDIUM" | "HARD"
       evidence: string[]
+      answer?: string
     }> = []
 
     // Generate questions for each level
     for (const level of levels) {
       // Retrieve context for this cognitive level
-      const query = buildQueryForLevel(level)
+      const query = buildQueryForLevel(level, purpose)
       const retrieval = await retrieveContext(documentId, query, {
         topK: 5,
         provider,
@@ -61,8 +94,17 @@ export async function POST(request: Request) {
       const context = formatContextForPrompt(retrieval.chunks)
       const evidence = extractEvidenceFromChunks(retrieval.chunks)
 
-      // Generate questions
-      const questions = await generateQuestions(context, level, questionsPerLevel, { provider })
+      // Generate questions with purpose-specific prompts
+      const questions = await generateQuestions(
+        context,
+        level,
+        questionsPerLevel,
+        {
+          provider,
+          purpose,
+          includeAnswers,
+        }
+      )
 
       // Store questions in database
       for (const question of questions) {
@@ -72,6 +114,8 @@ export async function POST(request: Request) {
           text: question.text,
           level: question.level,
           difficulty: question.difficulty,
+          purpose: purpose,
+          answer: includeAnswers ? question.answer : undefined,
           evidence: question.evidence.length > 0 ? question.evidence : evidence,
         })
 
@@ -99,6 +143,8 @@ export async function POST(request: Request) {
         questions: allQuestions,
         metadata: {
           provider: provider || "openai",
+          purpose,
+          includeAnswers,
           levels,
           questionsPerLevel,
           totalQuestions: allQuestions.length,
@@ -109,8 +155,6 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error("[GENERATE_API_ERROR]", error)
 
-    const _latency = Date.now() - startTime
-
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: "Invalid input", details: error.errors }, { status: 400 })
     }
@@ -119,15 +163,28 @@ export async function POST(request: Request) {
   }
 }
 
-function buildQueryForLevel(level: CognitiveLevel): string {
-  const queries = {
-    REMEMBER: "key facts, definitions, terms, and basic concepts",
-    UNDERSTAND: "explanations, interpretations, and main ideas",
-    APPLY: "examples, applications, and problem-solving scenarios",
-    ANALYZE: "relationships, patterns, causes, and effects",
-    EVALUATE: "arguments, evidence, judgments, and critiques",
-    CREATE: "synthesis, design, innovation, and original ideas",
+function buildQueryForLevel(level: string, purpose: string): string {
+  if (purpose === "CREATION") {
+    // For creation/brainstorming - focus on expansive, exploratory queries
+    const creationQueries: Record<string, string> = {
+      REMEMBER: "key concepts that could be expanded, definitions that need more context",
+      UNDERSTAND: "ideas that need deeper explanation, concepts requiring clarification",
+      APPLY: "potential applications, scenarios where concepts could be used differently",
+      ANALYZE: "unexplored relationships, alternative perspectives, hidden patterns",
+      EVALUATE: "areas needing validation, assumptions to challenge, improvements to suggest",
+      CREATE: "opportunities for innovation, gaps to fill, new directions to explore",
+    }
+    return creationQueries[level] || creationQueries.CREATE
+  } else {
+    // For evaluation/testing - focus on assessment queries
+    const evaluationQueries: Record<string, string> = {
+      REMEMBER: "key facts, definitions, terms, and basic concepts to test recall",
+      UNDERSTAND: "explanations, interpretations, and main ideas to test comprehension",
+      APPLY: "examples, applications, and problem-solving scenarios to test application",
+      ANALYZE: "relationships, patterns, causes, and effects to test analytical thinking",
+      EVALUATE: "arguments, evidence, judgments, and critiques to test evaluation skills",
+      CREATE: "synthesis, design, innovation, and original ideas to test creative thinking",
+    }
+    return evaluationQueries[level] || evaluationQueries.UNDERSTAND
   }
-
-  return queries[level]
 }
