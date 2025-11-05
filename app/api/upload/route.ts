@@ -35,14 +35,23 @@ export async function POST(request: Request) {
     // Check storage quota
     const quotaCheck = await checkStorageQuota(user.id, file.size)
     if (!quotaCheck.allowed) {
+      const usedMB = (quotaCheck.used / (1024 * 1024)).toFixed(2)
+      const limitMB = (quotaCheck.limit / (1024 * 1024)).toFixed(2)
+      const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2)
+      const availableMB = (quotaCheck.available / (1024 * 1024)).toFixed(2)
+
       return NextResponse.json(
         {
-          error: "Storage quota exceeded",
+          error: `Limite de armazenamento excedido. Você está usando ${usedMB}MB de ${limitMB}MB. Este arquivo (${fileSizeMB}MB) excede o espaço disponível (${availableMB}MB).`,
           details: {
             used: quotaCheck.used,
             limit: quotaCheck.limit,
             required: file.size,
             available: quotaCheck.available,
+            usedMB,
+            limitMB,
+            fileSizeMB,
+            availableMB,
           },
         },
         { status: 413 }
@@ -58,7 +67,8 @@ export async function POST(request: Request) {
       folder: "documents",
     })
 
-    // Create document record
+    // Create document record with INDEXED status
+    // Processing (chunking, embeddings) will happen only when generating questions
     const document = await prisma.document.create({
       data: {
         name: file.name,
@@ -69,7 +79,7 @@ export async function POST(request: Request) {
         r2Bucket: uploadResult.bucket,
         contentType: uploadResult.contentType,
         checksum: uploadResult.checksum,
-        status: "UPLOADING",
+        status: "INDEXED", // Mark as ready immediately
         userId: user.id,
       },
     })
@@ -80,15 +90,7 @@ export async function POST(request: Request) {
       fileName: file.name,
     })
 
-    // Trigger processing in the background
-    // In production, this would be a queue job
-    fetch(`${request.headers.get("origin")}/api/ingest`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ documentId: document.id }),
-    }).catch((error) => {
-      console.error("[UPLOAD_TRIGGER_INGEST_ERROR]", error)
-    })
+    // No automatic processing - will be done on-demand during question generation
 
     return NextResponse.json(
       {
