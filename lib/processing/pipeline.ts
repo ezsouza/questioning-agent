@@ -3,6 +3,7 @@ import { chunkText } from "./chunker"
 import { generateEmbeddings } from "@/lib/ai/embeddings"
 import { createChunks, createEmbedding, updateDocumentStatus } from "@/lib/db/queries"
 import { downloadFromR2 } from "@/lib/storage/r2-client"
+import { analyzeDocumentQuality } from "@/lib/rag/quality-analysis"
 import prisma from "@/lib/db/prisma"
 import { config } from "@/lib/config"
 
@@ -20,8 +21,6 @@ export interface ProcessingResult {
 
 export async function processDocument(documentId: string): Promise<ProcessingResult> {
   try {
-    console.log(`[PROCESSING] Starting processing for document ${documentId}`)
-
     // Update status to processing
     await updateDocumentStatus(documentId, "PROCESSING")
 
@@ -39,11 +38,9 @@ export async function processDocument(documentId: string): Promise<ProcessingRes
       throw new Error("Document has no R2 storage key")
     }
 
-    console.log(`[PROCESSING] Downloading from R2: ${document.r2Key}`)
     const buffer = await downloadFromR2(document.r2Key)
 
     // Extract text
-    console.log(`[PROCESSING] Extracting text from ${document.name}`)
     const text = await extractText(buffer, document.type)
 
     if (!text || text.trim().length === 0) {
@@ -64,7 +61,6 @@ export async function processDocument(documentId: string): Promise<ProcessingRes
     })
 
     // Chunk text
-    console.log(`[PROCESSING] Chunking text for ${document.name}`)
     const chunks = await chunkText(text)
 
     if (chunks.length === 0) {
@@ -72,7 +68,6 @@ export async function processDocument(documentId: string): Promise<ProcessingRes
     }
 
     // Create chunks in database
-    console.log(`[PROCESSING] Creating ${chunks.length} chunks in database`)
     await createChunks(documentId, chunks)
 
     // Fetch created chunks to get their IDs
@@ -82,12 +77,10 @@ export async function processDocument(documentId: string): Promise<ProcessingRes
     })
 
     // Generate embeddings
-    console.log(`[PROCESSING] Generating embeddings for ${createdChunks.length} chunks`)
     const chunkTexts = createdChunks.map((c) => c.content)
     const embeddings = await generateEmbeddings(chunkTexts, config.ai.provider)
 
     // Store embeddings
-    console.log(`[PROCESSING] Storing embeddings in database`)
     for (let i = 0; i < createdChunks.length; i++) {
       await createEmbedding(
         createdChunks[i].id,
@@ -97,10 +90,21 @@ export async function processDocument(documentId: string): Promise<ProcessingRes
       )
     }
 
+    // Analyze document quality
+    const qualityAnalysis = await analyzeDocumentQuality(documentId)
+
+    // Update document with quality metrics
+    await prisma.document.update({
+      where: { id: documentId },
+      data: {
+        qualityScore: qualityAnalysis.qualityScore,
+        contentAnalysis: qualityAnalysis.analysis,
+        badges: qualityAnalysis.badges,
+      },
+    })
+
     // Update status to indexed
     await updateDocumentStatus(documentId, "INDEXED")
-
-    console.log(`[PROCESSING] Successfully processed document ${documentId}`)
 
     return {
       documentId,
