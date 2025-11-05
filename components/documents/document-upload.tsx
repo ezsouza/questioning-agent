@@ -79,13 +79,22 @@ export function DocumentUpload() {
 
       if (!response.ok) {
         const error = await response.json()
+        
+        // Show more friendly error messages for storage quota
+        if (response.status === 413) {
+          throw new Error(error.error || "Limite de armazenamento excedido")
+        }
+        
         throw new Error(error.error || "Falha no envio")
       }
 
       const _result = await response.json()
 
-      // Simulate progress for better UX
+      // Document is ready immediately - no background processing
       setUploadProgress(100)
+
+      // Show success message
+      // Note: Processing (chunking, embeddings) will happen when generating questions
 
       // Refresh the page to show the new document
       router.refresh()
@@ -137,7 +146,7 @@ export function DocumentUpload() {
       ) : (
         <div className="space-y-4">
           <div className="flex items-center gap-3 p-4 border rounded-lg">
-            <FileText className="h-8 w-8 text-primary flex-shrink-0" />
+            <FileText className="h-8 w-8 text-primary shrink-0" />
             <div className="flex-1 min-w-0">
               <p className="font-medium truncate">{file.name}</p>
               <p className="text-sm text-muted-foreground">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
