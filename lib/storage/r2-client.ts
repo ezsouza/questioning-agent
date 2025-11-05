@@ -176,15 +176,15 @@ export async function downloadFromR2(key: string): Promise<Buffer> {
     throw new Error("No body in R2 response")
   }
 
-  // Handle ReadableStream properly
-  const stream = response.Body as ReadableStream
+  // AWS SDK returns a Readable stream (Node.js), not a Web ReadableStream
+  // Convert it to Buffer properly
+  const stream = response.Body as any
+  
+  // Collect chunks from Node.js Readable stream
   const chunks: Uint8Array[] = []
-
-  const reader = stream.getReader()
-  while (true) {
-    const { done, value } = await reader.read()
-    if (done) break
-    chunks.push(value)
+  
+  for await (const chunk of stream) {
+    chunks.push(chunk)
   }
 
   return Buffer.concat(chunks)
