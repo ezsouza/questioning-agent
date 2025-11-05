@@ -65,26 +65,22 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 
-    // Soft delete: marcar como deletado ao invés de remover do banco
-    await prisma.document.update({
-      where: { id },
-      data: {
-        deletedAt: new Date(),
-        status: "FAILED", // Usar FAILED como marcador de deletado
-      },
-    })
-
-    // Deletar arquivo do R2
+    // Delete file from R2 first
     if (document.r2Key) {
       try {
         await deleteFromR2(document.r2Key)
       } catch (error) {
-        console.warn("Erro ao deletar arquivo do R2:", error)
-        // Não bloquear a deleção se o R2 falhar
+        console.warn("[DELETE] Failed to delete from R2:", error)
+        // Do not block deletion if R2 fails
       }
     }
 
-    // Decrementar storage usage do usuário
+    // Hard delete: Remove from database (CASCADE removes chunks, embeddings, questions, etc.)
+    await prisma.document.delete({
+      where: { id },
+    })
+
+    // Decrement user storage usage
     await decrementStorageUsage(user.id, document.size, {
       documentId: document.id,
       fileName: document.name,
