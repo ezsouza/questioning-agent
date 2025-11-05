@@ -1,16 +1,14 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 import mammoth from "mammoth"
 
-// Dynamic import for pdf-parse due to CommonJS compatibility
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const pdfParse = require("pdf-parse")
-
 /**
  * Text extraction utilities for different file types
  */
 
 export async function extractTextFromPDF(buffer: Buffer): Promise<string> {
   try {
+    // Use pdf-parse-new - a maintained fork compatible with Next.js
+    const pdfParse = (await import("pdf-parse-new")).default
     const data = await pdfParse(buffer)
     return data.text
   } catch (error) {
