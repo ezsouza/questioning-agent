@@ -42,30 +42,87 @@ export async function createUser(data: { email: string; name: string; password: 
 export async function getDocumentById(id: string): Promise<DocumentWithRelations | null> {
   const result = await sql`
     SELECT 
-      d.*,
-      json_build_object('id', u.id, 'name', u.name, 'email', u.email) as user,
-      (SELECT COUNT(*) FROM chunks WHERE document_id = d.id) as chunk_count,
-      (SELECT COUNT(*) FROM questions WHERE document_id = d.id) as question_count
+      d.id,
+      d.name,
+      d.type,
+      d.size,
+      d.blob_url as "blobUrl",
+      d.r2_key as "r2Key",
+      d.r2_bucket as "r2Bucket",
+      d.content_type as "contentType",
+      d.checksum,
+      d.metadata,
+      d.status,
+      d.quality_score as "qualityScore",
+      d.content_analysis as "contentAnalysis",
+      d.badges,
+      d.user_id as "userId",
+      d.created_at as "createdAt",
+      d.updated_at as "updatedAt",
+      d.deleted_at as "deletedAt",
+      (SELECT COUNT(*) FROM chunks WHERE document_id = d.id)::int as "chunkCount",
+      (SELECT COUNT(*) FROM questions WHERE document_id = d.id)::int as "questionCount"
     FROM documents d
-    INNER JOIN users u ON u.id = d.user_id
     WHERE d.id = ${id}
+    AND d.deleted_at IS NULL
   `
 
-  return result[0] || null
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const rows = result as any[]
+  
+  if (!rows[0]) {
+    return null
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const doc: any = rows[0]
+  
+  return {
+    ...doc,
+    _count: {
+      chunks: doc.chunkCount || 0,
+      questions: doc.questionCount || 0,
+    }
+  } as DocumentWithRelations
 }
 
 export async function getDocumentsByUserId(userId: string): Promise<DocumentWithRelations[]> {
   const result = await sql`
     SELECT 
-      d.*,
-      (SELECT COUNT(*) FROM chunks WHERE document_id = d.id) as chunk_count,
-      (SELECT COUNT(*) FROM questions WHERE document_id = d.id) as question_count
+      d.id,
+      d.name,
+      d.type,
+      d.size,
+      d.blob_url as "blobUrl",
+      d.r2_key as "r2Key",
+      d.r2_bucket as "r2Bucket",
+      d.content_type as "contentType",
+      d.checksum,
+      d.metadata,
+      d.status,
+      d.quality_score as "qualityScore",
+      d.content_analysis as "contentAnalysis",
+      d.badges,
+      d.user_id as "userId",
+      d.created_at as "createdAt",
+      d.updated_at as "updatedAt",
+      d.deleted_at as "deletedAt",
+      (SELECT COUNT(*) FROM chunks WHERE document_id = d.id)::int as "chunkCount",
+      (SELECT COUNT(*) FROM questions WHERE document_id = d.id)::int as "questionCount"
     FROM documents d
     WHERE d.user_id = ${userId}
+    AND d.deleted_at IS NULL
     ORDER BY d.created_at DESC
   `
 
-  return result as DocumentWithRelations[]
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return (result as any[]).map((doc: any) => ({
+    ...doc,
+    _count: {
+      chunks: doc.chunkCount || 0,
+      questions: doc.questionCount || 0,
+    }
+  })) as DocumentWithRelations[]
 }
 
 export async function updateDocumentStatus(id: string, status: DocumentStatus) {
@@ -113,19 +170,21 @@ export async function createChunks(
 ) {
   if (chunks.length === 0) return
 
-  const values = chunks.map(
-    (chunk) => sql`(${documentId}, ${chunk.content}, ${chunk.position}, ${JSON.stringify(chunk.metadata || null)})`,
-  )
-
-  await sql`
-    INSERT INTO chunks (document_id, content, position, metadata)
-    VALUES ${sql(values.map((_, i) => `($${i * 4 + 1}, $${i * 4 + 2}, $${i * 4 + 3}, $${i * 4 + 4})`).join(","))}
-  `.values(...chunks.flatMap((c) => [documentId, c.content, c.position, JSON.stringify(c.metadata || null)]))
+  // Insert chunks in batch using individual inserts
+  // Neon serverless SQL doesn't support VALUES arrays in tagged templates
+  // So we use multiple individual inserts in a transaction-like manner
+  for (const chunk of chunks) {
+    await sql`
+      INSERT INTO chunks (document_id, content, position, metadata)
+      VALUES (${documentId}, ${chunk.content}, ${chunk.position}, ${JSON.stringify(chunk.metadata || null)})
+    `
+  }
 }
 
 // Embedding queries
 export async function createEmbedding(chunkId: string, vector: number[], model: string, provider: string) {
-  const vectorString = `[${vector.join(",")}]`
+  const vectorArray = vector.join(",")
+  const vectorString = "[" + vectorArray + "]"
 
   await sql`
     INSERT INTO embeddings (chunk_id, vector, model, provider)
@@ -139,7 +198,8 @@ export async function searchSimilarChunks(
   queryVector: number[],
   topK = 5,
 ): Promise<SearchResult[]> {
-  const vectorString = `[${queryVector.join(",")}]`
+  const vectorArray = queryVector.join(",")
+  const vectorString = "[" + vectorArray + "]"
 
   const results = await sql`
     SELECT 
@@ -185,30 +245,72 @@ export async function getQuestionsByDocumentId(
   return result as Question[]
 }
 
+export async function getAllQuestionsByUserId(
+  userId: string,
+  filters?: {
+    levels?: CognitiveLevel[]
+    difficulty?: QuestionDifficulty[]
+    purpose?: string
+  },
+): Promise<Array<Question & { documentName: string }>> {
+  let query = sql`
+    SELECT 
+      q.*,
+      d.name as "documentName"
+    FROM questions q
+    INNER JOIN documents d ON d.id = q.document_id
+    WHERE q.user_id = ${userId}
+    AND d.deleted_at IS NULL
+  `
+
+  if (filters?.levels && filters.levels.length > 0) {
+    query = sql`${query} AND q.level = ANY(${filters.levels})`
+  }
+
+  if (filters?.difficulty && filters.difficulty.length > 0) {
+    query = sql`${query} AND q.difficulty = ANY(${filters.difficulty})`
+  }
+
+  if (filters?.purpose) {
+    query = sql`${query} AND q.purpose = ${filters.purpose}`
+  }
+
+  query = sql`${query} ORDER BY q.created_at DESC`
+
+  const result = await query
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return result as any[]
+}
+
 export async function createQuestion(data: {
   documentId: string
   userId: string
   text: string
-  level: CognitiveLevel
-  difficulty: QuestionDifficulty
+  level: string
+  difficulty: string
+  purpose?: string
+  answer?: string
   evidence: string[]
   metadata?: Record<string, unknown>
 }): Promise<Question> {
   const result = await sql`
-    INSERT INTO questions (document_id, user_id, text, level, difficulty, evidence, metadata)
+    INSERT INTO questions (document_id, user_id, text, level, difficulty, purpose, answer, evidence, metadata)
     VALUES (
       ${data.documentId}, 
       ${data.userId}, 
       ${data.text}, 
       ${data.level}, 
       ${data.difficulty}, 
+      ${data.purpose || 'EVALUATION'},
+      ${data.answer || null},
       ${data.evidence}, 
       ${JSON.stringify(data.metadata || null)}
     )
     RETURNING *
   `
 
-  return result[0] as Question
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return (result as any)[0] as Question
 }
 
 export async function updateQuestion(

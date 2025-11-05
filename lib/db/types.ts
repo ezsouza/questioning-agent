@@ -6,6 +6,7 @@
 export type DocumentStatus = "UPLOADING" | "PROCESSING" | "INDEXED" | "FAILED"
 export type CognitiveLevel = "REMEMBER" | "UNDERSTAND" | "APPLY" | "ANALYZE" | "EVALUATE" | "CREATE"
 export type QuestionDifficulty = "EASY" | "MEDIUM" | "HARD"
+export type QuestionPurpose = "CREATION" | "EVALUATION"
 
 // Base models
 export interface User {
@@ -34,10 +35,19 @@ export interface Document {
   type: string
   size: number
   blob_url: string
+  r2_key?: string | null
+  r2_bucket?: string | null
+  content_type?: string | null
+  checksum?: string | null
+  metadata?: Record<string, unknown> | null
   status: DocumentStatus
+  quality_score?: number | null
+  content_analysis?: Record<string, unknown> | null
+  badges?: string[]
   user_id: string
   created_at: Date
   updated_at: Date
+  deleted_at?: Date | null
 }
 
 export interface DocumentVersion {
@@ -74,6 +84,8 @@ export interface Question {
   text: string
   level: CognitiveLevel
   difficulty: QuestionDifficulty
+  purpose: QuestionPurpose
+  answer?: string | null
   evidence: string[]
   metadata: Record<string, unknown> | null
   created_at: Date
@@ -107,9 +119,13 @@ export interface GenerationLog {
 
 // Extended types with relations
 export interface DocumentWithRelations extends Document {
-  user: Pick<User, "id" | "name" | "email">
-  chunk_count: number
-  question_count: number
+  user?: Pick<User, "id" | "name" | "email">
+  chunk_count?: number
+  question_count?: number
+  _count?: {
+    chunks: number
+    questions: number
+  }
 }
 
 export interface ChunkWithEmbeddings extends Chunk {
