@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -11,7 +11,14 @@ import { Switch } from "@/components/ui/switch"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Loader2, Sparkles } from "lucide-react"
 import { QuestionPurposeSelector, type QuestionPurpose } from "@/components/questions/question-purpose-selector"
-import { COGNITIVE_LEVEL_DESCRIPTIONS } from "@/lib/constants"
+import { 
+  EVALUATION_COGNITIVE_LEVELS,
+  CREATION_COGNITIVE_LEVELS,
+  EVALUATION_LEVEL_NAMES_PT,
+  CREATION_LEVEL_NAMES_PT,
+  EVALUATION_LEVEL_DESCRIPTIONS_PT,
+  CREATION_LEVEL_DESCRIPTIONS_PT,
+} from "@/lib/constants"
 
 interface QuestionGeneratorProps {
   documentId: string
@@ -26,7 +33,27 @@ export function QuestionGenerator({ documentId }: QuestionGeneratorProps) {
   const [isGenerating, setIsGenerating] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const levels = ["REMEMBER", "UNDERSTAND", "APPLY", "ANALYZE", "EVALUATE", "CREATE"]
+  // Get levels based on purpose
+  const levels = purpose === "CREATION" 
+    ? [...CREATION_COGNITIVE_LEVELS] 
+    : [...EVALUATION_COGNITIVE_LEVELS]
+  
+  const levelNames = purpose === "CREATION" 
+    ? CREATION_LEVEL_NAMES_PT 
+    : EVALUATION_LEVEL_NAMES_PT
+  
+  const levelDescriptions = purpose === "CREATION" 
+    ? CREATION_LEVEL_DESCRIPTIONS_PT 
+    : EVALUATION_LEVEL_DESCRIPTIONS_PT
+
+  // Reset selected levels when purpose changes
+  useEffect(() => {
+    if (purpose === "CREATION") {
+      setSelectedLevels(["EXPLORE", "IDEATE", "PROTOTYPE"])
+    } else {
+      setSelectedLevels(["REMEMBER", "UNDERSTAND", "APPLY"])
+    }
+  }, [purpose])
 
   function toggleLevel(level: string) {
     setSelectedLevels((prev) => (prev.includes(level) ? prev.filter((l) => l !== level) : [...prev, level]))
@@ -114,10 +141,10 @@ export function QuestionGenerator({ documentId }: QuestionGeneratorProps) {
                   />
                   <div className="flex-1">
                     <Label htmlFor={level} className="font-medium cursor-pointer">
-                      {level.charAt(0) + level.slice(1).toLowerCase()}
+                      {levelNames[level as keyof typeof levelNames]}
                     </Label>
                     <p className="text-sm text-muted-foreground mt-1">
-                      {COGNITIVE_LEVEL_DESCRIPTIONS[level.toLowerCase() as keyof typeof COGNITIVE_LEVEL_DESCRIPTIONS]}
+                      {levelDescriptions[level as keyof typeof levelDescriptions]}
                     </p>
                   </div>
                 </div>
