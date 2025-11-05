@@ -46,10 +46,10 @@ export function Navbar({ user }: NavbarProps) {
                   Dashboard
                 </Link>
                 <Link
-                  href="/dashboard"
+                  href="/dashboard/documents"
                   className={cn(
                     'text-sm font-medium transition-colors hover:text-primary',
-                    isActive('/dashboard') ? 'text-primary' : 'text-muted-foreground'
+                    isActive('/dashboard/documents') ? 'text-primary' : 'text-muted-foreground'
                   )}
                 >
                   Documentos
@@ -130,10 +130,10 @@ export function Navbar({ user }: NavbarProps) {
                   Dashboard
                 </Link>
                 <Link
-                  href="/dashboard"
+                  href="/dashboard/documents"
                   className={cn(
                     'block py-2 text-sm font-medium transition-colors hover:text-primary',
-                    isActive('/dashboard') ? 'text-primary' : 'text-muted-foreground'
+                    isActive('/dashboard/documents') ? 'text-primary' : 'text-muted-foreground'
                   )}
                   onClick={() => setIsMenuOpen(false)}
                 >
