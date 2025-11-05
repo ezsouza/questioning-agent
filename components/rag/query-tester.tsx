@@ -72,13 +72,13 @@ export function QueryTester({ documentId }: QueryTesterProps) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Search className="h-5 w-5" />
-            Test RAG Retrieval
+            Testar Recuperação RAG
           </CardTitle>
-          <CardDescription>Query your document to test the retrieval system</CardDescription>
+          <CardDescription>Consulte seu documento para testar o sistema de recuperação</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <Textarea
-            placeholder="Enter your query here..."
+            placeholder="Digite sua consulta aqui..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             rows={3}
@@ -86,7 +86,7 @@ export function QueryTester({ documentId }: QueryTesterProps) {
           />
           <Button onClick={handleQuery} disabled={isLoading || !query.trim()} className="w-full">
             {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Search
+            Buscar
           </Button>
         </CardContent>
       </Card>
@@ -100,9 +100,9 @@ export function QueryTester({ documentId }: QueryTesterProps) {
       {result && (
         <Card>
           <CardHeader>
-            <CardTitle>Results</CardTitle>
+            <CardTitle>Resultados</CardTitle>
             <CardDescription>
-              Found {result.metadata.totalResults} relevant chunks in {result.metadata.latency}ms (
+              Encontrados {result.metadata.totalResults} blocos relevantes em {result.metadata.latency}ms (
               {result.metadata.contextTokens} tokens)
             </CardDescription>
           </CardHeader>
@@ -110,8 +110,8 @@ export function QueryTester({ documentId }: QueryTesterProps) {
             {result.chunks.map((chunk, _index) => (
               <div key={chunk.id} className="p-4 border rounded-lg space-y-2">
                 <div className="flex items-center justify-between">
-                  <Badge variant="outline">Chunk {chunk.position + 1}</Badge>
-                  <Badge variant="secondary">{(chunk.similarity * 100).toFixed(1)}% match</Badge>
+                  <Badge variant="outline">Bloco {chunk.position + 1}</Badge>
+                  <Badge variant="secondary">{(chunk.similarity * 100).toFixed(1)}% correspondência</Badge>
                 </div>
                 <p className="text-sm text-muted-foreground">{chunk.content}</p>
               </div>
