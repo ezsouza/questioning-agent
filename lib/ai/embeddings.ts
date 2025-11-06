@@ -2,6 +2,7 @@ import { openai } from "@ai-sdk/openai"
 import { google } from "@ai-sdk/google"
 import { embed } from "ai"
 import { config } from "@/lib/config"
+import "@/lib/ai/init" // Initialize AI providers
 
 /**
  * Embedding generation utilities

@@ -2,6 +2,7 @@ import { openai } from "@ai-sdk/openai"
 import { google } from "@ai-sdk/google"
 import { generateText } from "ai"
 import { config } from "@/lib/config"
+import "@/lib/ai/init" // Initialize AI providers
 
 /**
  * Question generation utilities
@@ -47,7 +48,10 @@ export async function generateQuestions(
   const prompt = buildPrompt(context, level, count, purpose, includeAnswers)
 
   try {
-    const model = provider === "openai" ? openai(config.ai.openai.model) : google(config.ai.google.model)
+    // Use configured model
+    const model = provider === "openai" 
+      ? openai(config.ai.openai.model)
+      : google(config.ai.google.model)
 
     const { text } = await generateText({
       model,
