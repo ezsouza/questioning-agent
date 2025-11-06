@@ -143,16 +143,18 @@ model Chunk {
 }
 
 model Embedding {
-  id        String                 @id @default(dbgenerated("(gen_random_uuid())::text"))
-  chunkId   String                 @map("chunk_id")
-  vector    Unsupported("vector")?
-  model     String
-  provider  String
-  createdAt DateTime               @default(now()) @map("created_at")
-  chunk     Chunk                  @relation(fields: [chunkId], references: [id], onDelete: Cascade)
+  id         String                 @id @default(dbgenerated("(gen_random_uuid())::text"))
+  chunkId    String                 @map("chunk_id")
+  vector     Unsupported("vector")?
+  model      String
+  provider   String
+  dimensions Int?
+  createdAt  DateTime               @default(now()) @map("created_at")
+  chunk      Chunk                  @relation(fields: [chunkId], references: [id], onDelete: Cascade)
 
   @@unique([chunkId, model])
   @@index([chunkId])
+  @@index([provider])
   @@map("embeddings")
 }
 
