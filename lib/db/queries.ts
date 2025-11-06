@@ -217,7 +217,8 @@ export async function searchSimilarChunks(
     LIMIT ${topK}
   `
 
-  return results as SearchResult[]
+  const resultArray = results as SearchResult[]
+  return resultArray
 }
 
 // Question queries

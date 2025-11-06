@@ -54,7 +54,7 @@ export const config = {
     chunkSize: Number.parseInt(process.env.CHUNK_SIZE || "1000", 10),
     chunkOverlap: Number.parseInt(process.env.CHUNK_OVERLAP || "200", 10),
     topK: Number.parseInt(process.env.TOP_K || "5", 10),
-    similarityThreshold: Number.parseFloat(process.env.SIMILARITY_THRESHOLD || "0.7"),
+    similarityThreshold: Number.parseFloat(process.env.SIMILARITY_THRESHOLD || "0.3"), // Lowered from 0.7 to 0.3 for better recall
   },
 
   // Question Generation Configuration

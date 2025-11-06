@@ -47,6 +47,13 @@ export async function retrieveContext(
     // Filter by similarity threshold
     let filteredResults = results.filter((r) => r.similarity >= similarityThreshold)
 
+    // If no results after filtering, lower the threshold and use all results
+    // This ensures we always have context for question generation
+    if (filteredResults.length === 0 && results.length > 0) {
+      console.warn(`[RETRIEVAL] No chunks passed similarity threshold ${similarityThreshold}. Using all ${results.length} chunks.`)
+      filteredResults = results
+    }
+
     // Re-rank if enabled (simple keyword-based re-ranking)
     if (options.rerank) {
       filteredResults = rerankResults(filteredResults, query)
@@ -106,6 +113,11 @@ function rerankResults(results: SearchResult[], query: string): SearchResult[] {
 }
 
 export function formatContextForPrompt(chunks: SearchResult[], maxTokens: number = 8000): string {
+  // Validate input
+  if (!chunks || chunks.length === 0) {
+    throw new Error("Cannot format context: no chunks provided")
+  }
+
   // Rough estimation: 1 token ≈ 4 characters for English text
   const maxChars = maxTokens * 4
   let currentChars = 0
@@ -113,6 +125,12 @@ export function formatContextForPrompt(chunks: SearchResult[], maxTokens: number
 
   // Select chunks that fit within token limit
   for (const chunk of chunks) {
+    // Skip empty chunks
+    if (!chunk.content || chunk.content.trim().length === 0) {
+      console.warn("[FORMAT_CONTEXT] Skipping empty chunk")
+      continue
+    }
+
     const chunkSize = chunk.content.length + 50 // Add overhead for formatting
     if (currentChars + chunkSize <= maxChars) {
       selectedChunks.push(chunk)
@@ -130,11 +148,23 @@ export function formatContextForPrompt(chunks: SearchResult[], maxTokens: number
     }
   }
 
-  return selectedChunks
+  // Ensure we have at least some content
+  if (selectedChunks.length === 0) {
+    throw new Error("Cannot format context: all chunks were empty or exceeded token limit")
+  }
+
+  const formattedContext = selectedChunks
     .map((chunk, index) => {
-      return `[Context ${index + 1}] (Similarity: ${(chunk.similarity * 100).toFixed(1)}%)\n${chunk.content}`
+      return `[Contexto ${index + 1}] (Similaridade: ${(chunk.similarity * 100).toFixed(1)}%)\n${chunk.content}`
     })
     .join("\n\n---\n\n")
+
+  // Final validation
+  if (!formattedContext || formattedContext.trim().length === 0) {
+    throw new Error("Cannot format context: result is empty after formatting")
+  }
+
+  return formattedContext
 }
 
 export function extractEvidenceFromChunks(chunks: SearchResult[]): string[] {
