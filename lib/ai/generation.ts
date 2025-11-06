@@ -51,6 +51,16 @@ export async function generateQuestions(
   const purpose = options.purpose || "EVALUATION"
   const includeAnswers = options.includeAnswers || false
 
+  // Validate context is not empty
+  if (!context || context.trim().length === 0) {
+    throw new Error("Cannot generate questions: context is empty. Document must have valid chunks.")
+  }
+
+  // Validate context has minimum length (at least 100 characters)
+  if (context.trim().length < 100) {
+    throw new Error("Cannot generate questions: context is too short. Document may not have enough content.")
+  }
+
   const prompt = buildPrompt(context, level, count, purpose, includeAnswers)
 
   try {
@@ -69,7 +79,7 @@ export async function generateQuestions(
     return parseQuestions(text, level)
   } catch (error) {
     console.error("[GENERATION_ERROR]", error)
-    throw new Error(`Failed to generate questions with ${provider}`)
+    throw new Error(`Failed to generate questions with ${provider}: ${error instanceof Error ? error.message : 'Unknown error'}`)
   }
 }
 
@@ -86,8 +96,11 @@ function buildPrompt(context: string, level: string, count: number, purpose: str
 
   return `Você é um especialista em criação de conteúdo educacional, especializado na Taxonomia de Bloom.
 
-Contexto do documento:
+IMPORTANTE: Você deve criar questões EXCLUSIVAMENTE baseadas no contexto fornecido abaixo. NÃO use conhecimento externo, suposições ou informações que não estejam explicitamente presentes no texto.
+
+==== CONTEXTO DO DOCUMENTO (USE APENAS ESTE CONTEÚDO) ====
 ${context}
+==== FIM DO CONTEXTO ====
 
 Tarefa: Gerar ${count} questões de alta qualidade no nível cognitivo "${level}".
 
@@ -95,13 +108,16 @@ Descrição do Nível: ${levelDescription}
 
 Propósito: ${purposeContext}
 
-Requisitos:
-1. As questões devem ser baseadas APENAS no contexto fornecido
-2. As questões devem ser claras, específicas e sem ambiguidade
-3. Cada questão deve citar evidências específicas do contexto
-4. Variar a dificuldade (fácil, média, difícil) entre as questões
-5. As questões devem ser apropriadas para o nível ${level}
-6. Considerar o propósito ${purpose} ao criar as questões${answerInstruction}
+Requisitos OBRIGATÓRIOS:
+1. CRÍTICO: As questões devem ser baseadas EXCLUSIVAMENTE no contexto fornecido acima
+2. NÃO crie questões genéricas, hipotéticas ou que usem conhecimento externo
+3. Cada questão DEVE ser respondível usando APENAS as informações do contexto
+4. As questões devem ser claras, específicas e sem ambiguidade
+5. Cada questão deve citar evidências específicas do contexto fornecido
+6. Variar a dificuldade (fácil, média, difícil) entre as questões
+7. As questões devem ser apropriadas para o nível ${level}
+8. Considerar o propósito ${purpose} ao criar as questões${answerInstruction}
+9. Se o contexto não contiver informação suficiente para uma questão de qualidade, gere menos questões ao invés de inventar conteúdo
 
 Formato de Saída (JSON):
 [
