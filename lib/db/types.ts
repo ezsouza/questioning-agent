@@ -118,7 +118,10 @@ export interface GenerationLog {
 }
 
 // Extended types with relations
-export interface DocumentWithRelations extends Document {
+export interface DocumentWithRelations extends Omit<Document, 'user_id' | 'created_at' | 'updated_at'> {
+  userId: string
+  createdAt: Date
+  updatedAt: Date
   user?: Pick<User, "id" | "name" | "email">
   chunk_count?: number
   question_count?: number
