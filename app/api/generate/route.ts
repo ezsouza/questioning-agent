@@ -48,19 +48,36 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 
-    // Check if document has chunks
+    // Document must be INDEXED to have complete chunks and embeddings
+    if (document.status !== "INDEXED") {
+      return NextResponse.json(
+        { 
+          error: "Document is not ready for question generation",
+          details: `Current status: ${document.status}. Please wait for processing to complete or process the document manually.`,
+          status: document.status
+        },
+        { status: 400 }
+      )
+    }
+
+    // Verify chunks exist
     const chunkCount = await prisma.chunk.count({
       where: { documentId }
     })
 
     if (chunkCount === 0) {
+      console.error(`[GENERATE] Document ${documentId} has no chunks despite being INDEXED`)
       return NextResponse.json(
-        { error: "Document not prepared yet. Please process the document first." },
+        { 
+          error: "Document has no content chunks",
+          details: "The document processing failed to create chunks. Please reprocess the document.",
+          action: "REPROCESS_REQUIRED"
+        },
         { status: 400 }
       )
     }
 
-    // Check if embeddings exist, generate if needed
+    // Verify embeddings exist for all chunks
     const embeddingCount = await prisma.embedding.count({
       where: {
         chunk: {
@@ -69,14 +86,53 @@ export async function POST(request: Request) {
       }
     })
 
-    if (embeddingCount === 0) {
-      // Generate embeddings for all chunks
-      const embeddingsResult = await generateDocumentEmbeddings(documentId, provider)
+    // Auto-generate embeddings if missing
+    if (embeddingCount === 0 || embeddingCount < chunkCount) {
+      console.warn(`[GENERATE] Document ${documentId} is missing embeddings. Attempting to generate them automatically...`)
       
-      if (!embeddingsResult.success) {
-        console.error("[GENERATE] Failed to generate embeddings:", embeddingsResult)
+      try {
+        const embeddingsResult = await generateDocumentEmbeddings(documentId, provider)
+        
+        if (!embeddingsResult.success) {
+          console.error(`[GENERATE] Failed to auto-generate embeddings:`, embeddingsResult)
+          return NextResponse.json(
+            { 
+              error: "Document has no embeddings",
+              details: `Automatic embedding generation failed: ${embeddingsResult.error || 'Unknown error'}. Please reprocess the document manually.`,
+              action: "REPROCESS_REQUIRED"
+            },
+            { status: 400 }
+          )
+        }
+        
+        // Update embedding count after generation
+        const newEmbeddingCount = await prisma.embedding.count({
+          where: {
+            chunk: {
+              documentId
+            }
+          }
+        })
+        
+        if (newEmbeddingCount === 0) {
+          console.error(`[GENERATE] Still no embeddings after auto-generation`)
+          return NextResponse.json(
+            { 
+              error: "Failed to generate embeddings",
+              details: "Automatic embedding generation completed but no embeddings were created. The document may have invalid content.",
+              action: "REPROCESS_REQUIRED"
+            },
+            { status: 400 }
+          )
+        }
+      } catch (error) {
+        console.error(`[GENERATE] Error during auto-embedding generation:`, error)
         return NextResponse.json(
-          { error: "Failed to generate embeddings for document chunks" },
+          { 
+            error: "Failed to generate embeddings",
+            details: `Error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+            action: "REPROCESS_REQUIRED"
+          },
           { status: 500 }
         )
       }
@@ -92,20 +148,35 @@ export async function POST(request: Request) {
 
     // Generate questions for each level
     for (const level of levels) {
-      // Retrieve context for this cognitive level
+      // Retrieve context for this cognitive level using semantic search on chunks
       const query = buildQueryForLevel(level, purpose)
       const retrieval = await retrieveContext(documentId, query, {
-        topK: 5,
+        topK: 10, // Increased to get more diverse chunks
         provider,
         rerank: true,
       })
 
+      // Validate that we got chunks
+      if (!retrieval.chunks || retrieval.chunks.length === 0) {
+        console.error(`[GENERATE] No chunks retrieved for level ${level}. Skipping this level.`)
+        continue
+      }
+
       // Format context with token limit (8000 tokens ≈ 32000 chars)
-      // This ensures we don't exceed model's context window
+      // This ensures we don't exceed model's context window while using ONLY chunk content
       const context = formatContextForPrompt(retrieval.chunks, 8000)
+      
+      // Validate context is not empty
+      if (!context || context.trim().length === 0) {
+        console.error(`[GENERATE] Empty context after formatting for level ${level}. Skipping.`)
+        continue
+      }
+
+      // Extract evidence from chunks for reference
       const evidence = extractEvidenceFromChunks(retrieval.chunks)
 
       // Generate questions with purpose-specific prompts
+      // The AI model will ONLY use the chunk content provided in the context
       const questions = await generateQuestions(
         context,
         level,
@@ -132,6 +203,18 @@ export async function POST(request: Request) {
 
         allQuestions.push(question)
       }
+    }
+
+    // Validate that at least some questions were generated
+    if (allQuestions.length === 0) {
+      console.error(`[GENERATE] No questions were generated for document ${documentId}`)
+      return NextResponse.json(
+        { 
+          error: "Failed to generate questions",
+          details: "No questions could be generated from the document chunks. The document may not have enough content.",
+        },
+        { status: 500 }
+      )
     }
 
     const latency = Date.now() - startTime
