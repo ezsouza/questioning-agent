@@ -185,11 +185,13 @@ export async function createChunks(
 export async function createEmbedding(chunkId: string, vector: number[], model: string, provider: string) {
   const vectorArray = vector.join(",")
   const vectorString = "[" + vectorArray + "]"
+  const dimensions = vector.length
 
   await sql`
-    INSERT INTO embeddings (chunk_id, vector, model, provider)
-    VALUES (${chunkId}, ${vectorString}::vector, ${model}, ${provider})
-    ON CONFLICT (chunk_id, model) DO UPDATE SET vector = EXCLUDED.vector
+    INSERT INTO embeddings (chunk_id, vector, model, provider, dimensions)
+    VALUES (${chunkId}, ${vectorString}::vector, ${model}, ${provider}, ${dimensions})
+    ON CONFLICT (chunk_id, model) DO UPDATE 
+    SET vector = EXCLUDED.vector, dimensions = EXCLUDED.dimensions
   `
 }
 
@@ -294,7 +296,19 @@ export async function createQuestion(data: {
   metadata?: Record<string, unknown>
 }): Promise<Question> {
   const result = await sql`
-    INSERT INTO questions (document_id, user_id, text, level, difficulty, purpose, answer, evidence, metadata)
+    INSERT INTO questions (
+      document_id, 
+      user_id, 
+      text, 
+      level, 
+      difficulty, 
+      purpose, 
+      answer, 
+      evidence, 
+      metadata,
+      created_at,
+      updated_at
+    )
     VALUES (
       ${data.documentId}, 
       ${data.userId}, 
@@ -304,7 +318,9 @@ export async function createQuestion(data: {
       ${data.purpose || 'EVALUATION'},
       ${data.answer || null},
       ${data.evidence}, 
-      ${JSON.stringify(data.metadata || null)}
+      ${JSON.stringify(data.metadata || null)},
+      NOW(),
+      NOW()
     )
     RETURNING *
   `
