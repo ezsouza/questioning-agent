@@ -44,8 +44,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Document not found" }, { status: 404 })
     }
 
-    const docUserId = (document as any).userId || document.user_id
-    if (docUserId !== user.id) {
+    if (document.userId !== user.id) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 
