@@ -101,6 +101,10 @@ export async function uploadToR2(
   // Calculate MD5 checksum for data integrity
   const checksum = crypto.createHash("md5").update(buffer).digest("hex")
 
+  // Encode filename to Base64 to handle UTF-8 characters (accents, special chars)
+  // AWS metadata headers must be ASCII-safe, so we encode the original filename
+  const encodedFileName = Buffer.from(fileName, "utf-8").toString("base64")
+
   // Use multipart upload for better reliability with large files
   const upload = new Upload({
     client: r2Client,
@@ -112,7 +116,7 @@ export async function uploadToR2(
       ContentLength: fileSize,
       Metadata: {
         userId,
-        originalName: fileName,
+        originalName: encodedFileName, // Base64 encoded to preserve UTF-8 characters
         uploadedAt: new Date().toISOString(),
         checksum, // Store checksum in metadata instead
         ...metadata,
@@ -241,6 +245,23 @@ export async function fileExistsInR2(key: string): Promise<boolean> {
 }
 
 /**
+ * Decode Base64 encoded filename from metadata
+ * Handles both new (Base64) and legacy (plain text) formats
+ * 
+ * @param encodedName - Base64 encoded filename or plain text
+ * @returns Decoded UTF-8 filename
+ */
+function decodeFileName(encodedName: string): string {
+  try {
+    // Try to decode as Base64
+    return Buffer.from(encodedName, "base64").toString("utf-8")
+  } catch {
+    // Fallback to plain text for legacy files
+    return encodedName
+  }
+}
+
+/**
  * Get file metadata from R2
  * 
  * Retrieves object information without downloading content
@@ -261,11 +282,18 @@ export async function getFileMetadata(key: string) {
   })
 
   const response = await r2Client.send(command)
+  
+  // Decode originalName if present in metadata
+  const metadata = response.Metadata || {}
+  if (metadata.originalname) {
+    metadata.originalname = decodeFileName(metadata.originalname)
+  }
+  
   return {
     size: response.ContentLength || 0,
     contentType: response.ContentType || "",
     lastModified: response.LastModified,
-    metadata: response.Metadata || {},
+    metadata,
   }
 }
 
