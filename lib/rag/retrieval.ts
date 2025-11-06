@@ -105,8 +105,32 @@ function rerankResults(results: SearchResult[], query: string): SearchResult[] {
     .sort((a, b) => b.similarity - a.similarity)
 }
 
-export function formatContextForPrompt(chunks: SearchResult[]): string {
-  return chunks
+export function formatContextForPrompt(chunks: SearchResult[], maxTokens: number = 8000): string {
+  // Rough estimation: 1 token ≈ 4 characters for English text
+  const maxChars = maxTokens * 4
+  let currentChars = 0
+  const selectedChunks: SearchResult[] = []
+
+  // Select chunks that fit within token limit
+  for (const chunk of chunks) {
+    const chunkSize = chunk.content.length + 50 // Add overhead for formatting
+    if (currentChars + chunkSize <= maxChars) {
+      selectedChunks.push(chunk)
+      currentChars += chunkSize
+    } else {
+      // Try to fit a truncated version of this chunk
+      const remainingChars = maxChars - currentChars - 50
+      if (remainingChars > 200) {
+        selectedChunks.push({
+          ...chunk,
+          content: chunk.content.slice(0, remainingChars) + "...",
+        })
+      }
+      break
+    }
+  }
+
+  return selectedChunks
     .map((chunk, index) => {
       return `[Context ${index + 1}] (Similarity: ${(chunk.similarity * 100).toFixed(1)}%)\n${chunk.content}`
     })
