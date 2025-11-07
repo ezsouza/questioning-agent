@@ -1,5 +1,6 @@
 import { betterAuth } from "better-auth"
 import { prismaAdapter } from "better-auth/adapters/prisma";
+import { nextCookies } from "better-auth/next-js"
 import { prisma } from "@/lib/db/prisma"
 
 export const auth = betterAuth({
@@ -38,5 +39,8 @@ export const auth = betterAuth({
   trustedOrigins: [
     process.env.BETTER_AUTH_URL || "http://localhost:3000",
     "https://*.vercel.app",
+  ],
+  plugins: [
+    nextCookies(), // Plugin para garantir que cookies sejam configurados corretamente em Server Actions
   ],
 })
