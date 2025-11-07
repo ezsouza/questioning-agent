@@ -3,7 +3,6 @@
 import type React from "react"
 
 import { useState } from "react"
-import { login } from "@/lib/auth/actions"
 import { authClient } from "@/lib/auth/client"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
@@ -24,15 +23,23 @@ export function LoginForm() {
     setError(null)
 
     const formData = new FormData(event.currentTarget)
+    const email = formData.get("email") as string
+    const password = formData.get("password") as string
 
     try {
-      const result = await login(formData)
+      const { data, error: signInError } = await authClient.signIn.email({
+        email,
+        password,
+      })
 
-      if (result?.error) {
-        setError(result.error)
+      if (signInError) {
+        setError(signInError.message || "Email ou senha inválidos")
+      } else if (data) {
+        router.push("/dashboard")
+        router.refresh()
       }
-      // If successful, the server action will redirect
-    } catch {
+    } catch (err) {
+      console.error("Login error:", err)
       setError("Ocorreu um erro. Por favor, tente novamente.")
     } finally {
       setIsLoading(false)
@@ -44,16 +51,19 @@ export function LoginForm() {
     setError(null)
 
     try {
-      const data = await authClient.signIn.social({
+      const { data, error: socialError } = await authClient.signIn.social({
         provider,
         callbackURL: "/dashboard",
       })
 
-      if (data.url) {
-        router.push(data.url)
+      if (socialError) {
+        setError(socialError.message || "Erro ao fazer login com " + provider)
+      } else if (data?.url) {
+        window.location.href = data.url
       }
     } catch (err: any) {
       setError(err?.message || "Erro ao fazer login com " + provider)
+    } finally {
       setIsLoading(false)
     }
   }

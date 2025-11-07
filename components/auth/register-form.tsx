@@ -3,7 +3,6 @@
 import type React from "react"
 
 import { useState } from "react"
-import { register } from "@/lib/auth/actions"
 import { authClient } from "@/lib/auth/client"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
@@ -24,15 +23,25 @@ export function RegisterForm() {
     setError(null)
 
     const formData = new FormData(event.currentTarget)
+    const name = formData.get("name") as string
+    const email = formData.get("email") as string
+    const password = formData.get("password") as string
 
     try {
-      const result = await register(formData)
+      const { data, error: signUpError } = await authClient.signUp.email({
+        name,
+        email,
+        password,
+      })
 
-      if (result?.error) {
-        setError(result.error)
+      if (signUpError) {
+        setError(signUpError.message || "Email já em uso ou falha no cadastro")
+      } else if (data) {
+        router.push("/dashboard")
+        router.refresh()
       }
-      // If successful, the server action will redirect
-    } catch {
+    } catch (err) {
+      console.error("Register error:", err)
       setError("Ocorreu um erro. Por favor, tente novamente.")
     } finally {
       setIsLoading(false)
@@ -44,16 +53,19 @@ export function RegisterForm() {
     setError(null)
 
     try {
-      const data = await authClient.signIn.social({
+      const { data, error: socialError } = await authClient.signIn.social({
         provider,
         callbackURL: "/dashboard",
       })
 
-      if (data.url) {
-        router.push(data.url)
+      if (socialError) {
+        setError(socialError.message || "Erro ao fazer cadastro com " + provider)
+      } else if (data?.url) {
+        window.location.href = data.url
       }
     } catch (err: any) {
       setError(err?.message || "Erro ao fazer cadastro com " + provider)
+    } finally {
       setIsLoading(false)
     }
   }
