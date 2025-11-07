@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getCurrentUser } from "@/lib/auth/session"
 import { prisma } from "@/lib/db/prisma"
-import { logout } from "@/lib/auth/actions"
+import { auth } from "@/lib/auth/auth"
+import { headers } from "next/headers"
 
 export async function DELETE(request: NextRequest) {
   try {
@@ -17,8 +18,10 @@ export async function DELETE(request: NextRequest) {
       where: { id: user.id },
     })
 
-    // Fazer logout
-    await logout()
+    // Fazer logout usando Better Auth API
+    await auth.api.signOut({
+      headers: await headers(),
+    })
 
     return NextResponse.json({ 
       success: true, 

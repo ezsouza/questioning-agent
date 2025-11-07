@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getCurrentUser } from "@/lib/auth/session"
-import { logout } from "@/lib/auth/actions"
+import { auth } from "@/lib/auth/auth"
+import { headers } from "next/headers"
 
 export async function POST(request: NextRequest) {
   try {
@@ -12,7 +13,9 @@ export async function POST(request: NextRequest) {
 
     // Para desativar, apenas fazemos logout
     // A conta não é deletada e pode ser reativada fazendo login novamente
-    await logout()
+    await auth.api.signOut({
+      headers: await headers(),
+    })
 
     return NextResponse.json({ 
       success: true, 
