@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { useState } from "react"
-import { logout } from "@/lib/auth/actions"
+import { authClient } from "@/lib/auth/client"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -40,7 +40,8 @@ export function UserNav({ user }: UserNavProps) {
     const SettingsPopup = typeof window !== "undefined" ? require("@/components/settings/settings-popup").default : null
 
   async function handleLogout() {
-    await logout()
+    await authClient.signOut()
+    window.location.href = "/login"
   }
 
   return (
@@ -78,7 +79,7 @@ export function UserNav({ user }: UserNavProps) {
           <DropdownMenuSeparator />
           <DropdownMenuItem
             onClick={async () => {
-              await logout()
+              await authClient.signOut()
               window.location.href = "/login"
             }}
             className="cursor-pointer"
