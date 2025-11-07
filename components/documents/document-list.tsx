@@ -103,25 +103,37 @@ export function DocumentList({ documents }: DocumentListProps) {
 
   const handleDownload = async (doc: Document) => {
     try {
-      // Fetch the document blob URL and trigger download
-      if (doc.blobUrl) {
-        const link = document.createElement('a')
-        link.href = doc.blobUrl
-        link.download = doc.name
-        document.body.appendChild(link)
-        link.click()
-        document.body.removeChild(link)
-        
-        toast({
-          title: "Download iniciado",
-          description: `Baixando ${doc.name}...`,
-        })
+      // Use API route for download with proper headers
+      const response = await fetch(`/api/documents/${doc.id}/download`)
+
+      if (!response.ok) {
+        throw new Error('Download failed')
       }
+
+      // Get the blob from response
+      const blob = await response.blob()
+
+      // Create download link
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = doc.name
+      document.body.appendChild(link)
+      link.click()
+      
+      // Cleanup
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(url)
+      
+      toast({
+        title: "Download concluído",
+        description: `${doc.name} foi baixado com sucesso.`,
+      })
     } catch (error) {
       console.error('[DOWNLOAD_ERROR]', error)
       toast({
         title: "Erro no download",
-        description: "Não foi possível baixar o documento.",
+        description: "Não foi possível baixar o documento. Tente novamente.",
         variant: "destructive",
       })
     }
