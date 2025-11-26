@@ -5,9 +5,11 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
+import { Checkbox } from "@/components/ui/checkbox"
 import { Edit2, Save, X, Trash2 } from "lucide-react"
 import type { CognitiveLevel, QuestionDifficulty } from "@/lib/generated/prisma"
 import { QuestionFeedback } from "./question-feedback"
+import { ExportButton } from "./export-button"
 
 // Translation mappings for question levels and difficulty
 const LEVEL_NAMES_PT: Record<string, string> = {
@@ -60,11 +62,13 @@ interface QuestionListProps {
   questions: Question[]
   onUpdate?: (id: string, text: string) => Promise<void>
   onDelete?: (id: string) => Promise<void>
+  enableSelection?: boolean
 }
 
-export function QuestionList({ questions, onUpdate, onDelete }: QuestionListProps) {
+export function QuestionList({ questions, onUpdate, onDelete, enableSelection = false }: QuestionListProps) {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editText, setEditText] = useState("")
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
 
   // Helper function to get level name in Portuguese
   function getLevelName(level: CognitiveLevel): string {
@@ -89,6 +93,28 @@ export function QuestionList({ questions, onUpdate, onDelete }: QuestionListProp
     setEditText("")
   }
 
+  function toggleSelection(id: string) {
+    const newSelected = new Set(selectedIds)
+    if (newSelected.has(id)) {
+      newSelected.delete(id)
+    } else {
+      newSelected.add(id)
+    }
+    setSelectedIds(newSelected)
+  }
+
+  function toggleSelectAll() {
+    if (selectedIds.size === questions.length) {
+      setSelectedIds(new Set())
+    } else {
+      setSelectedIds(new Set(questions.map((q) => q.id)))
+    }
+  }
+
+  function clearSelection() {
+    setSelectedIds(new Set())
+  }
+
   if (questions.length === 0) {
     return (
       <div className="text-center py-12">
@@ -99,12 +125,46 @@ export function QuestionList({ questions, onUpdate, onDelete }: QuestionListProp
   }
 
   return (
-    <div className="space-y-3">
-      {questions.map((question) => (
-        <Card key={question.id}>
-          <CardContent className="p-4">
-            <div className="flex items-start gap-3">
-              <div className="flex-1 space-y-3">
+    <div className="space-y-4">
+      {/* Selection controls */}
+      {enableSelection && (
+        <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+          <div className="flex items-center gap-3">
+            <Checkbox
+              checked={selectedIds.size === questions.length && questions.length > 0}
+              onCheckedChange={toggleSelectAll}
+            />
+            <span className="text-sm font-medium">
+              {selectedIds.size > 0
+                ? `${selectedIds.size} ${selectedIds.size === 1 ? "questão selecionada" : "questões selecionadas"}`
+                : "Selecionar todas"}
+            </span>
+          </div>
+          {selectedIds.size > 0 && (
+            <div className="flex items-center gap-2">
+              <ExportButton questionIds={Array.from(selectedIds)} variant="default" size="sm" />
+              <Button variant="ghost" size="sm" onClick={clearSelection}>
+                Limpar Seleção
+              </Button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Questions list */}
+      <div className="space-y-3">
+        {questions.map((question) => (
+          <Card key={question.id}>
+            <CardContent className="p-4">
+              <div className="flex items-start gap-3">
+                {enableSelection && (
+                  <Checkbox
+                    checked={selectedIds.has(question.id)}
+                    onCheckedChange={() => toggleSelection(question.id)}
+                    className="mt-1"
+                  />
+                )}
+                <div className="flex-1 space-y-3">
                 <div className="flex items-center gap-2">
                   <Badge variant="outline">
                     {getLevelName(question.level)}
@@ -157,15 +217,17 @@ export function QuestionList({ questions, onUpdate, onDelete }: QuestionListProp
               </div>
             </div>
 
-            {/* Feedback Section */}
-            {editingId !== question.id && (
-              <div className="mt-3 pt-3 border-t">
-                <QuestionFeedback questionId={question.id} />
-              </div>
-            )}
+              {/* Feedback Section */}
+              {editingId !== question.id && (
+                <div className="mt-3 pt-3 border-t">
+                  <QuestionFeedback questionId={question.id} />
+                </div>
+              )}
+            </div>
           </CardContent>
         </Card>
-      ))}
+        ))}
+      </div>
     </div>
   )
 }
