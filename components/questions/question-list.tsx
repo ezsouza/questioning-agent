@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
 import { Edit2, Save, X, Trash2 } from "lucide-react"
 import type { CognitiveLevel, QuestionDifficulty } from "@/lib/generated/prisma"
+import { QuestionFeedback } from "./question-feedback"
 
 // Translation mappings for question levels and difficulty
 const LEVEL_NAMES_PT: Record<string, string> = {
@@ -155,6 +156,13 @@ export function QuestionList({ questions, onUpdate, onDelete }: QuestionListProp
                 )}
               </div>
             </div>
+
+            {/* Feedback Section */}
+            {editingId !== question.id && (
+              <div className="mt-3 pt-3 border-t">
+                <QuestionFeedback questionId={question.id} />
+              </div>
+            )}
           </CardContent>
         </Card>
       ))}

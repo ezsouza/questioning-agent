@@ -15,6 +15,7 @@ import {
 import Link from "next/link"
 import { formatDistanceToNow } from "date-fns"
 import { ptBR } from "date-fns/locale"
+import { QuestionFeedback } from "@/components/questions/question-feedback"
 
 const levelIcons: Record<string, React.ComponentType<{ className?: string }>> = {
   REMEMBER: FileText,
@@ -234,6 +235,11 @@ export default async function QuestionsPage() {
                                 </div>
                               </details>
                             )}
+
+                            {/* Feedback Section */}
+                            <div className="pt-3 mt-3 border-t">
+                              <QuestionFeedback questionId={question.id} />
+                            </div>
                           </div>
                         </div>
                       </div>
