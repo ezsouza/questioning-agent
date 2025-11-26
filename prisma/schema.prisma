@@ -173,6 +173,7 @@ model Question {
   purpose    QuestionPurpose    @default(EVALUATION)
   document   Document           @relation(fields: [documentId], references: [id], onDelete: Cascade)
   user       User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  feedback   QuestionFeedback[]
 
   @@index([documentId])
   @@index([userId])
@@ -180,6 +181,25 @@ model Question {
   @@index([difficulty])
   @@index([purpose])
   @@map("questions")
+}
+
+model QuestionFeedback {
+  id         String               @id @default(dbgenerated("(gen_random_uuid())::text"))
+  questionId String               @map("question_id")
+  userId     String               @map("user_id")
+  rating     FeedbackRating
+  reasons    FeedbackReason[]
+  comment    String?
+  createdAt  DateTime             @default(now()) @map("created_at")
+  updatedAt  DateTime             @updatedAt @map("updated_at")
+  question   Question             @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([questionId, userId])
+  @@index([questionId])
+  @@index([userId])
+  @@index([rating])
+  @@index([createdAt])
+  @@map("question_feedback")
 }
 
 model QueryLog {
@@ -268,4 +288,22 @@ enum QuestionPurpose {
   EVALUATION
 
   @@map("question_purpose")
+}
+
+enum FeedbackRating {
+  LIKE
+  DISLIKE
+
+  @@map("feedback_rating")
+}
+
+enum FeedbackReason {
+  OUT_OF_CONTEXT
+  INCORRECT_ANSWER
+  POORLY_FORMULATED
+  WRONG_COGNITIVE_LEVEL
+  DUPLICATE
+  OTHER
+
+  @@map("feedback_reason")
 }
