@@ -75,77 +75,81 @@ export default async function QuestionsPage() {
   const creationQuestions = questions.filter(q => q.purpose === "CREATION").length
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-8 max-w-7xl">
       <div className="mb-8">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold mb-2">Minhas Questões</h1>
             <p className="text-muted-foreground">
-              Todas as questões geradas a partir dos seus documentos
+              {totalQuestions === 0 
+                ? "Nenhuma questão gerada ainda" 
+                : `${totalQuestions} ${totalQuestions === 1 ? 'questão' : 'questões'} em ${totalDocuments} ${totalDocuments === 1 ? 'documento' : 'documentos'}`
+              }
             </p>
           </div>
           {totalQuestions > 0 && <ExportButton />}
         </div>
       </div>
 
-      {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Total de Questões
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{totalQuestions}</div>
-          </CardContent>
-        </Card>
+      {/* Statistics Cards - Simplified */}
+      {totalQuestions > 0 && (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          <Card className="hover:shadow-md transition-shadow">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between mb-2">
+                <Brain className="h-5 w-5 text-primary" />
+                <span className="text-2xl font-bold">{totalQuestions}</span>
+              </div>
+              <p className="text-sm text-muted-foreground">Total</p>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Documentos
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{totalDocuments}</div>
-          </CardContent>
-        </Card>
+          <Card className="hover:shadow-md transition-shadow">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between mb-2">
+                <FileText className="h-5 w-5 text-muted-foreground" />
+                <span className="text-2xl font-bold">{totalDocuments}</span>
+              </div>
+              <p className="text-sm text-muted-foreground">Documentos</p>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Avaliação
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{evaluationQuestions}</div>
-          </CardContent>
-        </Card>
+          <Card className="hover:shadow-md transition-shadow">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between mb-2">
+                <Award className="h-5 w-5 text-blue-500" />
+                <span className="text-2xl font-bold">{evaluationQuestions}</span>
+              </div>
+              <p className="text-sm text-muted-foreground">Avaliação</p>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Criação
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{creationQuestions}</div>
-          </CardContent>
-        </Card>
-      </div>
+          <Card className="hover:shadow-md transition-shadow">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between mb-2">
+                <Lightbulb className="h-5 w-5 text-yellow-500" />
+                <span className="text-2xl font-bold">{creationQuestions}</span>
+              </div>
+              <p className="text-sm text-muted-foreground">Criação</p>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       {/* Questions grouped by document */}
       {totalQuestions === 0 ? (
         <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <Brain className="h-12 w-12 text-muted-foreground mb-4" />
-            <p className="text-lg font-medium mb-2">Nenhuma questão gerada ainda</p>
-            <p className="text-sm text-muted-foreground mb-4">
-              Faça upload de um documento e gere questões
+          <CardContent className="flex flex-col items-center justify-center py-16">
+            <Brain className="h-16 w-16 text-muted-foreground/50 mb-4" />
+            <p className="text-xl font-medium mb-2">Nenhuma questão ainda</p>
+            <p className="text-sm text-muted-foreground mb-6 text-center max-w-md">
+              Envie documentos e gere questões personalizadas usando IA
             </p>
-            <Button asChild>
-              <Link href="/dashboard">Ir para Dashboard</Link>
+            <Button asChild size="lg">
+              <Link href="/dashboard">
+                <FileText className="mr-2 h-4 w-4" />
+                Começar Agora
+              </Link>
             </Button>
           </CardContent>
         </Card>
@@ -154,13 +158,13 @@ export default async function QuestionsPage() {
           {Object.entries(questionsByDocument).map(([documentName, docQuestions]) => (
             <Card key={documentName}>
               <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle className="flex items-center gap-2">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                  <div className="flex-1">
+                    <CardTitle className="flex items-center gap-2 text-lg">
                       <FileText className="h-5 w-5 text-primary" />
                       {documentName}
                     </CardTitle>
-                    <CardDescription>
+                    <CardDescription className="mt-1.5">
                       {docQuestions.length} {docQuestions.length === 1 ? "questão" : "questões"}
                     </CardDescription>
                   </div>

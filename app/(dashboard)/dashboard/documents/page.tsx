@@ -3,10 +3,10 @@ import { getDocumentsByUserId } from "@/lib/db/queries"
 import prisma from "@/lib/db/prisma"
 import { DocumentUpload } from "@/components/documents/document-upload"
 import { DocumentList } from "@/components/documents/document-list"
-import StorageUsageBar from "@/components/settings/storage-usage-bar"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
+import { Button } from "@/components/ui/button"
 import { 
   FileText, 
   HardDrive, 
@@ -14,10 +14,13 @@ import {
   AlertTriangle,
   Clock,
   Sparkles,
-  TrendingUp
+  TrendingUp,
+  ArrowRight,
+  Eye
 } from "lucide-react"
 import { formatDistanceToNow } from "date-fns"
 import { ptBR } from "date-fns/locale"
+import Link from "next/link"
 
 export default async function DocumentsPage() {
   const user = await requireUser()
@@ -52,7 +55,7 @@ export default async function DocumentsPage() {
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
   
   const staleDocuments = documents.filter(d => {
-    const createdAt = new Date(d.created_at)
+    const createdAt = new Date(d.createdAt)
     return createdAt < sevenDaysAgo && (d._count?.chunks || 0) === 0
   })
 
@@ -70,222 +73,214 @@ export default async function DocumentsPage() {
     status: doc.status,
     qualityScore: doc.quality_score,
     badges: doc.badges,
-    createdAt: doc.created_at,
+    createdAt: doc.createdAt,
     blobUrl: doc.blob_url,
     _count: doc._count || { chunks: 0, questions: 0 }
   }))
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-8 max-w-7xl">
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2">Meus Documentos</h1>
         <p className="text-muted-foreground">
-          Gerencie seus documentos e monitore o uso de armazenamento
+          Gerencie seus documentos e monitore a qualidade e armazenamento
         </p>
       </div>
 
-      {/* Statistics Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <FileText className="h-4 w-4" />
-              Total de Documentos
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{totalDocuments}</div>
+      {/* Statistics Grid - Simplified */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <Card className="hover:shadow-md transition-shadow">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between mb-2">
+              <FileText className="h-5 w-5 text-muted-foreground" />
+              <span className="text-2xl font-bold">{totalDocuments}</span>
+            </div>
+            <p className="text-sm text-muted-foreground">Total</p>
             <p className="text-xs text-muted-foreground mt-1">
               {processedDocuments} processados
             </p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <Sparkles className="h-4 w-4" />
-              Com Questões
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{documentsWithQuestions}</div>
+        <Card className="hover:shadow-md transition-shadow">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between mb-2">
+              <Sparkles className="h-5 w-5 text-yellow-500" />
+              <span className="text-2xl font-bold">{documentsWithQuestions}</span>
+            </div>
+            <p className="text-sm text-muted-foreground">Com Questões</p>
             <p className="text-xs text-muted-foreground mt-1">
-              {totalDocuments - documentsWithQuestions} aguardando
+              {totalDocuments - documentsWithQuestions} pendentes
             </p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <Award className="h-4 w-4" />
-              Alta Qualidade
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{highQualityDocs}</div>
+        <Card className="hover:shadow-md transition-shadow">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between mb-2">
+              <Award className="h-5 w-5 text-green-500" />
+              <span className="text-2xl font-bold">{highQualityDocs}</span>
+            </div>
+            <p className="text-sm text-muted-foreground">Alta Qualidade</p>
             <p className="text-xs text-muted-foreground mt-1">
               Score ≥ 80
             </p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <HardDrive className="h-4 w-4" />
-              Armazenamento
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {storagePercentage.toFixed(0)}%
+        <Card className="hover:shadow-md transition-shadow">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between mb-2">
+              <HardDrive className="h-5 w-5 text-blue-500" />
+              <span className="text-2xl font-bold">
+                {storagePercentage.toFixed(0)}%
+              </span>
             </div>
+            <p className="text-sm text-muted-foreground">Armazenamento</p>
             <p className="text-xs text-muted-foreground mt-1">
-              {(storageUsed / 1024 / 1024).toFixed(1)} MB de {(storageLimit / 1024 / 1024).toFixed(0)} MB
+              {(storageUsed / 1024 / 1024).toFixed(1)} MB usado
             </p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Storage Usage */}
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <HardDrive className="h-5 w-5" />
-            Uso de Armazenamento
-          </CardTitle>
-          <CardDescription>
-            Monitore seu espaço disponível para upload de documentos
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <StorageUsageBar />
-        </CardContent>
-      </Card>
-
       {/* Quality Distribution */}
       {processedDocuments > 0 && (
         <Card className="mb-6">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2 text-lg">
               <TrendingUp className="h-5 w-5" />
               Distribuição de Qualidade
             </CardTitle>
             <CardDescription>
-              Análise de qualidade dos documentos processados
+              Análise dos {processedDocuments} documentos processados
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-3">
             <div className="space-y-2">
               <div className="flex items-center justify-between text-sm">
                 <span className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-green-500" />
+                  <div className="w-2 h-2 rounded-full bg-green-500" />
                   Alta Qualidade (≥80)
                 </span>
                 <span className="font-medium">{highQualityDocs} documentos</span>
               </div>
               <Progress 
                 value={(highQualityDocs / processedDocuments) * 100} 
-                className="h-2 bg-green-500/20"
+                className="h-1.5"
               />
             </div>
 
             <div className="space-y-2">
               <div className="flex items-center justify-between text-sm">
                 <span className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-yellow-500" />
+                  <div className="w-2 h-2 rounded-full bg-yellow-500" />
                   Média Qualidade (60-79)
                 </span>
                 <span className="font-medium">{mediumQualityDocs} documentos</span>
               </div>
               <Progress 
                 value={(mediumQualityDocs / processedDocuments) * 100}
-                className="h-2 bg-yellow-500/20"
+                className="h-1.5"
               />
             </div>
 
             <div className="space-y-2">
               <div className="flex items-center justify-between text-sm">
                 <span className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-red-500" />
+                  <div className="w-2 h-2 rounded-full bg-red-500" />
                   Baixa Qualidade (&lt;60)
                 </span>
                 <span className="font-medium">{lowQualityDocs} documentos</span>
               </div>
               <Progress 
                 value={(lowQualityDocs / processedDocuments) * 100}
-                className="h-2 bg-red-500/20"
+                className="h-1.5"
               />
             </div>
           </CardContent>
         </Card>
       )}
 
-      {/* Alerts for stale and unused documents */}
+      {/* Action Cards - Interactive */}
       {(staleDocuments.length > 0 || unusedDocuments.length > 0) && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <div className="grid lg:grid-cols-2 gap-6 mb-6">
           {staleDocuments.length > 0 && (
-            <Card className="border-orange-500/50">
+            <Card className="border-l-4 border-l-orange-500">
               <CardHeader>
-                <CardTitle className="text-sm flex items-center gap-2">
-                  <Clock className="h-4 w-4 text-orange-500" />
-                  Documentos Antigos Não Processados
-                </CardTitle>
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-2">
+                    <Clock className="h-5 w-5 text-orange-500" />
+                    <CardTitle className="text-lg">Não Processados</CardTitle>
+                  </div>
+                  <Badge variant="outline" className="text-orange-500">
+                    {staleDocuments.length}
+                  </Badge>
+                </div>
+                <CardDescription>
+                  Documentos aguardando processamento há mais de 7 dias
+                </CardDescription>
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-muted-foreground mb-3">
-                  {staleDocuments.length} {staleDocuments.length === 1 ? 'documento' : 'documentos'} enviado há mais de 7 dias e ainda não processado
-                </p>
-                <div className="space-y-2">
-                  {staleDocuments.slice(0, 3).map(doc => (
-                    <div key={doc.id} className="flex items-center justify-between text-xs p-2 bg-muted/50 rounded">
-                      <span className="truncate flex-1">{doc.name}</span>
-                      <Badge variant="outline" className="text-xs">
-                        {formatDistanceToNow(new Date(doc.created_at), { 
-                          addSuffix: true, 
-                          locale: ptBR 
-                        })}
-                      </Badge>
+                <div className="space-y-2 max-h-48 overflow-y-auto">
+                  {staleDocuments.map(doc => (
+                    <div key={doc.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg hover:bg-muted transition-colors group">
+                      <div className="flex-1 min-w-0 mr-3">
+                        <p className="font-medium text-sm truncate">{doc.name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {formatDistanceToNow(new Date(doc.createdAt), { 
+                            addSuffix: true, 
+                            locale: ptBR 
+                          })}
+                        </p>
+                      </div>
+                      <Button asChild variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Link href={`/dashboard/documents/${doc.id}`}>
+                          <Eye className="h-4 w-4 mr-1" />
+                          Ver
+                        </Link>
+                      </Button>
                     </div>
                   ))}
-                  {staleDocuments.length > 3 && (
-                    <p className="text-xs text-muted-foreground text-center">
-                      +{staleDocuments.length - 3} mais
-                    </p>
-                  )}
                 </div>
               </CardContent>
             </Card>
           )}
 
           {unusedDocuments.length > 0 && (
-            <Card className="border-blue-500/50">
+            <Card className="border-l-4 border-l-blue-500">
               <CardHeader>
-                <CardTitle className="text-sm flex items-center gap-2">
-                  <AlertTriangle className="h-4 w-4 text-blue-500" />
-                  Documentos Processados Sem Questões
-                </CardTitle>
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="h-5 w-5 text-blue-500" />
+                    <CardTitle className="text-lg">Prontos para Questões</CardTitle>
+                  </div>
+                  <Badge variant="outline" className="text-blue-500">
+                    {unusedDocuments.length}
+                  </Badge>
+                </div>
+                <CardDescription>
+                  Documentos processados aguardando geração de questões
+                </CardDescription>
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-muted-foreground mb-3">
-                  {unusedDocuments.length} {unusedDocuments.length === 1 ? 'documento processado' : 'documentos processados'} sem questões geradas
-                </p>
-                <div className="space-y-2">
-                  {unusedDocuments.slice(0, 3).map(doc => (
-                    <div key={doc.id} className="flex items-center justify-between text-xs p-2 bg-muted/50 rounded">
-                      <span className="truncate flex-1">{doc.name}</span>
-                      <Badge variant="secondary" className="text-xs">
-                        {doc._count?.chunks || 0} chunks
-                      </Badge>
+                <div className="space-y-2 max-h-48 overflow-y-auto">
+                  {unusedDocuments.map(doc => (
+                    <div key={doc.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg hover:bg-muted transition-colors group">
+                      <div className="flex-1 min-w-0 mr-3">
+                        <p className="font-medium text-sm truncate">{doc.name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {doc._count?.chunks || 0} blocos processados
+                        </p>
+                      </div>
+                      <Button asChild variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Link href={`/dashboard/documents/${doc.id}`}>
+                          <Sparkles className="h-4 w-4 mr-1" />
+                          Gerar
+                        </Link>
+                      </Button>
                     </div>
                   ))}
-                  {unusedDocuments.length > 3 && (
-                    <p className="text-xs text-muted-foreground text-center">
-                      +{unusedDocuments.length - 3} mais
-                    </p>
-                  )}
                 </div>
               </CardContent>
             </Card>
@@ -296,12 +291,12 @@ export default async function DocumentsPage() {
       {/* Upload Section */}
       <Card className="mb-6">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 text-lg">
             <FileText className="h-5 w-5" />
-            Enviar Novo Documento
+            Novo Documento
           </CardTitle>
           <CardDescription>
-            Envie arquivos PDF, DOCX, TXT ou Markdown para gerar questões (máx. 10MB)
+            PDF, DOCX, TXT ou Markdown (máx. 10MB)
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -312,9 +307,12 @@ export default async function DocumentsPage() {
       {/* Documents List */}
       <Card>
         <CardHeader>
-          <CardTitle>Todos os Documentos ({totalDocuments})</CardTitle>
+          <CardTitle className="text-lg">Todos os Documentos</CardTitle>
           <CardDescription>
-            Gerencie e gere questões a partir dos seus documentos
+            {totalDocuments === 0 
+              ? "Nenhum documento enviado ainda" 
+              : `${totalDocuments} ${totalDocuments === 1 ? 'documento' : 'documentos'} • Clique em um documento para gerenciar`
+            }
           </CardDescription>
         </CardHeader>
         <CardContent>
