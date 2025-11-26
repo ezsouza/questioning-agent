@@ -165,57 +165,57 @@ export function QuestionList({ questions, onUpdate, onDelete, enableSelection = 
                   />
                 )}
                 <div className="flex-1 space-y-3">
-                <div className="flex items-center gap-2">
-                  <Badge variant="outline">
-                    {getLevelName(question.level)}
-                  </Badge>
-                  <Badge variant="secondary">
-                    {DIFFICULTY_NAMES_PT[question.difficulty] || question.difficulty}
-                  </Badge>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline">
+                      {getLevelName(question.level)}
+                    </Badge>
+                    <Badge variant="secondary">
+                      {DIFFICULTY_NAMES_PT[question.difficulty] || question.difficulty}
+                    </Badge>
+                  </div>
+
+                  {editingId === question.id ? (
+                    <Textarea value={editText} onChange={(e) => setEditText(e.target.value)} rows={3} />
+                  ) : (
+                    <p className="text-sm">{question.text}</p>
+                  )}
+
+                  {question.evidence.length > 0 && (
+                    <div className="space-y-1">
+                      <p className="text-xs font-medium text-muted-foreground">Evidências:</p>
+                      {question.evidence.slice(0, 2).map((ev, idx) => (
+                        <p key={idx} className="text-xs text-muted-foreground italic pl-3 border-l-2">
+                          {ev}
+                        </p>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
-                {editingId === question.id ? (
-                  <Textarea value={editText} onChange={(e) => setEditText(e.target.value)} rows={3} />
-                ) : (
-                  <p className="text-sm">{question.text}</p>
-                )}
-
-                {question.evidence.length > 0 && (
-                  <div className="space-y-1">
-                    <p className="text-xs font-medium text-muted-foreground">Evidências:</p>
-                    {question.evidence.slice(0, 2).map((ev, idx) => (
-                      <p key={idx} className="text-xs text-muted-foreground italic pl-3 border-l-2">
-                        {ev}
-                      </p>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              <div className="flex gap-1">
-                {editingId === question.id ? (
-                  <>
-                    <Button size="icon" variant="ghost" onClick={() => saveEdit(question.id)}>
-                      <Save className="h-4 w-4" />
-                    </Button>
-                    <Button size="icon" variant="ghost" onClick={cancelEdit}>
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </>
-                ) : (
-                  <>
-                    <Button size="icon" variant="ghost" onClick={() => startEdit(question)}>
-                      <Edit2 className="h-4 w-4" />
-                    </Button>
-                    {onDelete && (
-                      <Button size="icon" variant="ghost" onClick={() => onDelete(question.id)}>
-                        <Trash2 className="h-4 w-4" />
+                <div className="flex gap-1">
+                  {editingId === question.id ? (
+                    <>
+                      <Button size="icon" variant="ghost" onClick={() => saveEdit(question.id)}>
+                        <Save className="h-4 w-4" />
                       </Button>
-                    )}
-                  </>
-                )}
+                      <Button size="icon" variant="ghost" onClick={cancelEdit}>
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <Button size="icon" variant="ghost" onClick={() => startEdit(question)}>
+                        <Edit2 className="h-4 w-4" />
+                      </Button>
+                      {onDelete && (
+                        <Button size="icon" variant="ghost" onClick={() => onDelete(question.id)}>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </>
+                  )}
+                </div>
               </div>
-            </div>
 
               {/* Feedback Section */}
               {editingId !== question.id && (
@@ -223,7 +223,6 @@ export function QuestionList({ questions, onUpdate, onDelete, enableSelection = 
                   <QuestionFeedback questionId={question.id} />
                 </div>
               )}
-            </div>
           </CardContent>
         </Card>
         ))}
