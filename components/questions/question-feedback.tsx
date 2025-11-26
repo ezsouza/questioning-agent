@@ -1,10 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { ThumbsUp, ThumbsDown } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
-import { FeedbackDialog } from './feedback-dialog'
+import { FeedbackDialog } from '@/components/questions/feedback-dialog'
 import { toast } from '@/hooks/use-toast'
 
 interface QuestionFeedbackProps {
@@ -21,6 +21,28 @@ export function QuestionFeedback({
   const [rating, setRating] = useState<'LIKE' | 'DISLIKE' | null>(initialRating)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
+
+  // Load existing feedback on mount
+  useEffect(() => {
+    const loadFeedback = async () => {
+      try {
+        const response = await fetch(`/api/questions/feedback?questionId=${questionId}`)
+        if (response.ok) {
+          const data = await response.json()
+          if (data.rating) {
+            setRating(data.rating)
+          }
+        }
+      } catch (error) {
+        console.error('Error loading feedback:', error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    loadFeedback()
+  }, [questionId])
 
   const handleLike = async () => {
     if (rating === 'LIKE') {
@@ -108,7 +130,7 @@ export function QuestionFeedback({
           variant="ghost"
           size="sm"
           onClick={handleLike}
-          disabled={isSubmitting}
+          disabled={isSubmitting || isLoading}
           className={cn(
             'gap-2',
             rating === 'LIKE' && 'bg-green-500/10 text-green-600 hover:bg-green-500/20 hover:text-green-700'
@@ -122,7 +144,7 @@ export function QuestionFeedback({
           variant="ghost"
           size="sm"
           onClick={handleDislike}
-          disabled={isSubmitting}
+          disabled={isSubmitting || isLoading}
           className={cn(
             'gap-2',
             rating === 'DISLIKE' && 'bg-red-500/10 text-red-600 hover:bg-red-500/20 hover:text-red-700'
