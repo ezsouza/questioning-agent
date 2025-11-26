@@ -18,6 +18,9 @@ import {
   CheckCircle2,
   Terminal,
   HardDrive,
+  MessageSquare,
+  ThumbsUp,
+  ThumbsDown,
 } from 'lucide-react'
 import Link from 'next/link'
 
@@ -410,6 +413,126 @@ GOOGLE_CLIENT_SECRET="..."`}
 
       <Separator />
 
+      {/* Feedback de Questões */}
+      <section id="feedback" className="scroll-mt-20 space-y-4">
+        <div className="flex items-center gap-3">
+          <MessageSquare className="h-5 w-5 sm:h-6 sm:w-6 text-primary shrink-0" />
+          <h2 className="text-2xl sm:text-3xl font-bold">Sistema de Feedback</h2>
+        </div>
+
+        <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
+          Ajude a melhorar a qualidade das questões geradas avaliando e fornecendo feedback detalhado sobre cada questão.
+        </p>
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base sm:text-lg">Avaliação Rápida</CardTitle>
+              <CardDescription className="text-sm">Útil ou Não útil em cada questão</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex items-start gap-3">
+                <div className="shrink-0 w-8 h-8 rounded-full bg-green-500/10 flex items-center justify-center">
+                  <ThumbsUp className="h-4 w-4 text-green-600" />
+                </div>
+                <div>
+                  <h4 className="font-medium text-sm">Útil</h4>
+                  <p className="text-sm text-muted-foreground">
+                    Questão bem formulada, relevante e com gabarito correto
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3">
+                <div className="shrink-0 w-8 h-8 rounded-full bg-red-500/10 flex items-center justify-center">
+                  <ThumbsDown className="h-4 w-4 text-red-600" />
+                </div>
+                <div>
+                  <h4 className="font-medium text-sm">Não útil</h4>
+                  <p className="text-sm text-muted-foreground">
+                    Questão precisa de melhorias - abre popup com motivos específicos
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base sm:text-lg">Feedback Detalhado</CardTitle>
+              <CardDescription className="text-sm">Motivos quando marcar como "Não útil"</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-2 text-sm">
+                <li className="flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-red-500" />
+                  <span>Fora de contexto do documento</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-red-500" />
+                  <span>Gabarito incorreto ou impreciso</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-red-500" />
+                  <span>Questão mal formulada ou confusa</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-red-500" />
+                  <span>Nível cognitivo inadequado</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-red-500" />
+                  <span>Duplicada ou muito similar</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-muted-foreground" />
+                  <span>Outros motivos (campo livre)</span>
+                </li>
+              </ul>
+            </CardContent>
+          </Card>
+        </div>
+
+        <Alert>
+          <Brain className="h-4 w-4 shrink-0" />
+          <AlertTitle className="text-sm sm:text-base">Aprendizado Contínuo</AlertTitle>
+          <AlertDescription className="text-sm">
+            Seu feedback é usado para melhorar continuamente o sistema de geração de questões. 
+            Quanto mais específico o feedback, melhor o sistema se torna ao longo do tempo.
+          </AlertDescription>
+        </Alert>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base sm:text-lg">Como Funciona</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <h4 className="font-medium text-sm sm:text-base">1. Avalie a Questão</h4>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Ao visualizar suas questões, você verá botões "Útil" e "Não útil" em cada uma. Use "Útil" para questões de qualidade e "Não útil" para aquelas que precisam melhorias.
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <h4 className="font-medium text-sm sm:text-base">2. Forneça Detalhes (Quando não útil)</h4>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Ao clicar em "Não útil", um popup aparecerá solicitando o motivo específico. Selecione uma ou mais opções que se aplicam e, opcionalmente, adicione um comentário detalhado.
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <h4 className="font-medium text-sm sm:text-base">3. Sistema Aprende Continuamente</h4>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Seu feedback é analisado por IA e usado automaticamente na próxima geração de questões. O sistema identifica padrões nos feedbacks negativos e ajusta o prompt para evitar erros semelhantes, melhorando progressivamente a qualidade.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </section>
+
+      <Separator />
+
       {/* Exportação */}
       <section id="exportacao" className="scroll-mt-20 space-y-4">
         <div className="flex items-center gap-3">
@@ -598,6 +721,179 @@ q2,"...",analise,hard`}
           <AlertDescription className="text-sm">
             Seus documentos e questões são privados e nunca são compartilhados com terceiros ou usados para
             treinamento de modelos.
+          </AlertDescription>
+        </Alert>
+      </section>
+
+      <Separator />
+
+      {/* Contribuições e Roadmap */}
+      <section id="contribuicoes" className="scroll-mt-20 space-y-4">
+        <div className="flex items-center gap-3">
+          <Rocket className="h-5 w-5 sm:h-6 sm:w-6 text-primary shrink-0" />
+          <h2 className="text-2xl sm:text-3xl font-bold">Contribuições & Roadmap</h2>
+        </div>
+
+        <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
+          O Questioning Agent está em constante evolução. Confira as próximas funcionalidades planejadas e como você
+          pode contribuir para o projeto.
+        </p>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base sm:text-lg">Próximas Funcionalidades</CardTitle>
+            <CardDescription className="text-sm">Recursos em desenvolvimento e planejamento</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="flex gap-3">
+                <div className="shrink-0 w-2 h-2 rounded-full bg-primary mt-2" />
+                <div>
+                  <h4 className="font-medium text-sm sm:text-base">Quiz Interativo</h4>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Transformar questões geradas em quizzes interativos com timer, pontuação e feedback imediato
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <div className="shrink-0 w-2 h-2 rounded-full bg-primary mt-2" />
+                <div>
+                  <h4 className="font-medium text-sm sm:text-base">Suporte a Novos Formatos</h4>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Upload e análise de apresentações (PowerPoint, Google Slides), áudio (transcrição automática) e vídeos
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <div className="shrink-0 w-2 h-2 rounded-full bg-primary mt-2" />
+                <div>
+                  <h4 className="font-medium text-sm sm:text-base">Banco de Questões Colaborativo</h4>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Compartilhar e descobrir questões criadas por outros educadores na comunidade
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <div className="shrink-0 w-2 h-2 rounded-full bg-primary mt-2" />
+                <div>
+                  <h4 className="font-medium text-sm sm:text-base">Análise de Performance</h4>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Dashboard de analytics com métricas de desempenho dos alunos e identificação de pontos de dificuldade
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <div className="shrink-0 w-2 h-2 rounded-full bg-primary mt-2" />
+                <div>
+                  <h4 className="font-medium text-sm sm:text-base">Integração com LMS</h4>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Conectar com plataformas como Moodle, Canvas e Google Classroom para exportação direta
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <div className="shrink-0 w-2 h-2 rounded-full bg-primary mt-2" />
+                <div>
+                  <h4 className="font-medium text-sm sm:text-base">Geração de Imagens para Questões</h4>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Criar automaticamente diagramas, gráficos e ilustrações relevantes usando IA
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <div className="shrink-0 w-2 h-2 rounded-full bg-primary mt-2" />
+                <div>
+                  <h4 className="font-medium text-sm sm:text-base">API Pública</h4>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Documentação e endpoints REST para integração com sistemas externos
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <div className="shrink-0 w-2 h-2 rounded-full bg-primary mt-2" />
+                <div>
+                  <h4 className="font-medium text-sm sm:text-base">Suporte Multilíngue</h4>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Geração de questões em múltiplos idiomas (inglês, espanhol, francês, etc.)
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <div className="shrink-0 w-2 h-2 rounded-full bg-primary mt-2" />
+                <div>
+                  <h4 className="font-medium text-sm sm:text-base">Editor de Questões Avançado</h4>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Interface rica para edição, formatação e personalização de questões geradas
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <div className="shrink-0 w-2 h-2 rounded-full bg-primary mt-2" />
+                <div>
+                  <h4 className="font-medium text-sm sm:text-base">Gamificação</h4>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Sistema de badges, níveis e conquistas para engajar estudantes e educadores
+                  </p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base sm:text-lg">Como Contribuir</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <h4 className="font-medium mb-2 text-sm sm:text-base">Desenvolvedores</h4>
+              <p className="text-sm text-muted-foreground leading-relaxed mb-2">
+                Contribua com código, correção de bugs ou implementação de novas features:
+              </p>
+              <ul className="space-y-1 text-sm text-muted-foreground list-disc list-inside ml-2">
+                <li>Fork o repositório no GitHub</li>
+                <li>Crie uma branch para sua feature</li>
+                <li>Siga as convenções de código do projeto</li>
+                <li>Envie um Pull Request detalhado</li>
+              </ul>
+            </div>
+
+            <div>
+              <h4 className="font-medium mb-2 text-sm sm:text-base">Educadores</h4>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Compartilhe feedback sobre usabilidade, sugira melhorias pedagógicas e reporte bugs através do nosso
+                formulário de contato.
+              </p>
+            </div>
+
+            <div>
+              <h4 className="font-medium mb-2 text-sm sm:text-base">Comunidade</h4>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Ajude outros usuários, crie tutoriais, traduza a documentação ou simplesmente compartilhe o projeto
+                com outros educadores.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Alert>
+          <Sparkles className="h-4 w-4 shrink-0" />
+          <AlertTitle className="text-sm sm:text-base">Tem uma ideia?</AlertTitle>
+          <AlertDescription className="flex text-sm">
+            Compartilhe suas sugestões e ideias através da página de
+            <Link href="/contact" className="text-primary hover:underline font-medium">
+              contato
+            </Link>
+            . Sua opinião é fundamental para a evolução do projeto!
           </AlertDescription>
         </Alert>
       </section>

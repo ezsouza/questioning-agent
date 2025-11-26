@@ -14,6 +14,7 @@ import {
   Settings,
   Shield,
   Download,
+  MessageSquare,
 } from 'lucide-react'
 
 interface NavItem {
@@ -42,6 +43,7 @@ const navigation: NavSection[] = [
       { title: 'Upload de Documentos', href: '#upload', icon: FileText },
       { title: 'Pipeline RAG', href: '#rag', icon: Brain },
       { title: 'Geração de Questões', href: '#geracao', icon: Sparkles },
+      { title: 'Sistema de Feedback', href: '#feedback', icon: MessageSquare },
       { title: 'Exportação', href: '#exportacao', icon: Download },
     ],
   },
@@ -51,6 +53,12 @@ const navigation: NavSection[] = [
       { title: 'Arquitetura', href: '#arquitetura', icon: Code },
       { title: 'Banco de Dados', href: '#database', icon: Database },
       { title: 'Segurança', href: '#seguranca', icon: Shield },
+    ],
+  },
+  {
+    title: 'Comunidade',
+    items: [
+      { title: 'Contribuições & Roadmap', href: '#contribuicoes', icon: Rocket },
     ],
   },
 ]
