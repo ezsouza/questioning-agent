@@ -4,7 +4,7 @@ import { NextResponse } from "next/server"
 import { z } from "zod"
 import { getCurrentUser } from "@/lib/auth/session"
 import { updateQuestion, deleteQuestion } from "@/lib/db/queries"
-import prisma from "@/lib/db"
+import prisma from "@/lib/db/prisma"
 
 const updateSchema = z.object({
   text: z.string().min(1).max(1000).optional(),

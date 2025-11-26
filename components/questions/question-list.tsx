@@ -6,7 +6,19 @@ import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { Edit2, Save, X, Trash2 } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { toast } from "@/hooks/use-toast"
 import type { CognitiveLevel, QuestionDifficulty } from "@/lib/generated/prisma"
 import { QuestionFeedback } from "./question-feedback"
 import { ExportButton } from "./export-button"
@@ -66,9 +78,14 @@ interface QuestionListProps {
 }
 
 export function QuestionList({ questions, onUpdate, onDelete, enableSelection = false }: QuestionListProps) {
+  const router = useRouter()
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editText, setEditText] = useState("")
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [questionToDelete, setQuestionToDelete] = useState<string | null>(null)
+  const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   // Helper function to get level name in Portuguese
   function getLevelName(level: CognitiveLevel): string {
@@ -115,6 +132,83 @@ export function QuestionList({ questions, onUpdate, onDelete, enableSelection = 
     setSelectedIds(new Set())
   }
 
+  function openDeleteDialog(id: string) {
+    setQuestionToDelete(id)
+    setDeleteDialogOpen(true)
+  }
+
+  async function confirmDelete() {
+    if (!questionToDelete) return
+
+    setIsDeleting(true)
+    try {
+      const response = await fetch(`/api/questions/${questionToDelete}`, {
+        method: "DELETE",
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to delete question")
+      }
+
+      toast({
+        title: "Questão deletada",
+        description: "A questão foi removida com sucesso.",
+      })
+
+      if (onDelete) {
+        await onDelete(questionToDelete)
+      }
+      
+      router.refresh()
+    } catch (error) {
+      toast({
+        title: "Erro ao deletar",
+        description: "Não foi possível deletar a questão. Tente novamente.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsDeleting(false)
+      setDeleteDialogOpen(false)
+      setQuestionToDelete(null)
+    }
+  }
+
+  async function confirmBulkDelete() {
+    if (selectedIds.size === 0) return
+
+    setIsDeleting(true)
+    try {
+      const response = await fetch("/api/questions/bulk-delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ questionIds: Array.from(selectedIds) }),
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to delete questions")
+      }
+
+      const data = await response.json()
+
+      toast({
+        title: "Questões deletadas",
+        description: data.message || "As questões foram removidas com sucesso.",
+      })
+
+      setSelectedIds(new Set())
+      router.refresh()
+    } catch (error) {
+      toast({
+        title: "Erro ao deletar",
+        description: "Não foi possível deletar as questões. Tente novamente.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsDeleting(false)
+      setBulkDeleteDialogOpen(false)
+    }
+  }
+
   if (questions.length === 0) {
     return (
       <div className="text-center py-12">
@@ -143,6 +237,15 @@ export function QuestionList({ questions, onUpdate, onDelete, enableSelection = 
           {selectedIds.size > 0 && (
             <div className="flex items-center gap-2">
               <ExportButton questionIds={Array.from(selectedIds)} variant="default" size="sm" />
+              <Button 
+                variant="destructive" 
+                size="sm" 
+                onClick={() => setBulkDeleteDialogOpen(true)}
+                disabled={isDeleting}
+              >
+                <Trash2 className="h-4 w-4 mr-1" />
+                Deletar ({selectedIds.size})
+              </Button>
               <Button variant="ghost" size="sm" onClick={clearSelection}>
                 Limpar Seleção
               </Button>
@@ -207,11 +310,14 @@ export function QuestionList({ questions, onUpdate, onDelete, enableSelection = 
                       <Button size="icon" variant="ghost" onClick={() => startEdit(question)}>
                         <Edit2 className="h-4 w-4" />
                       </Button>
-                      {onDelete && (
-                        <Button size="icon" variant="ghost" onClick={() => onDelete(question.id)}>
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      )}
+                      <Button 
+                        size="icon" 
+                        variant="ghost" 
+                        onClick={() => openDeleteDialog(question.id)}
+                        disabled={isDeleting}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     </>
                   )}
                 </div>
@@ -227,6 +333,51 @@ export function QuestionList({ questions, onUpdate, onDelete, enableSelection = 
         </Card>
         ))}
       </div>
+
+      {/* Single Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja deletar esta questão? Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={confirmDelete}
+              disabled={isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting ? "Deletando..." : "Deletar"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Bulk Delete Confirmation Dialog */}
+      <AlertDialog open={bulkDeleteDialogOpen} onOpenChange={setBulkDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar Exclusão em Massa</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja deletar {selectedIds.size} {selectedIds.size === 1 ? 'questão' : 'questões'}? 
+              Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={confirmBulkDelete}
+              disabled={isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting ? "Deletando..." : `Deletar ${selectedIds.size}`}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
