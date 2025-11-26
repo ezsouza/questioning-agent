@@ -121,7 +121,7 @@ export default async function DocumentDetailPage({ params }: { params: Promise<{
                 <CardDescription>Revise, edite e exporte suas questões geradas</CardDescription>
               </CardHeader>
               <CardContent>
-                <QuestionList questions={questions} />
+                <QuestionList questions={questions} enableSelection={true} />
               </CardContent>
             </Card>
 

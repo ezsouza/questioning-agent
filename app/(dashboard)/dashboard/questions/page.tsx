@@ -16,6 +16,7 @@ import Link from "next/link"
 import { formatDistanceToNow } from "date-fns"
 import { ptBR } from "date-fns/locale"
 import { QuestionFeedback } from "@/components/questions/question-feedback"
+import { ExportButton } from "@/components/questions/export-button"
 
 const levelIcons: Record<string, React.ComponentType<{ className?: string }>> = {
   REMEMBER: FileText,
@@ -76,10 +77,15 @@ export default async function QuestionsPage() {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Minhas Questões</h1>
-        <p className="text-muted-foreground">
-          Todas as questões geradas a partir dos seus documentos
-        </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold mb-2">Minhas Questões</h1>
+            <p className="text-muted-foreground">
+              Todas as questões geradas a partir dos seus documentos
+            </p>
+          </div>
+          {totalQuestions > 0 && <ExportButton />}
+        </div>
       </div>
 
       {/* Statistics Cards */}
@@ -158,11 +164,18 @@ export default async function QuestionsPage() {
                       {docQuestions.length} {docQuestions.length === 1 ? "questão" : "questões"}
                     </CardDescription>
                   </div>
-                  <Button asChild variant="outline" size="sm">
-                    <Link href={`/dashboard/documents/${docQuestions[0].document_id}`}>
-                      Ver Documento
-                    </Link>
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <ExportButton 
+                      documentId={docQuestions[0].document_id}
+                      variant="outline"
+                      size="sm"
+                    />
+                    <Button asChild variant="outline" size="sm">
+                      <Link href={`/dashboard/documents/${docQuestions[0].document_id}`}>
+                        Ver Documento
+                      </Link>
+                    </Button>
+                  </div>
                 </div>
               </CardHeader>
               <CardContent>
