@@ -1,11 +1,19 @@
 import Link from "next/link"
+import { redirect } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { FileText, Brain, Sparkles, Download } from "lucide-react"
+import { getCurrentUser } from "@/lib/auth/session"
 
-export default function HomePage() {
+export default async function HomePage() {
+  const user = await getCurrentUser()
+  
+  // Redirect authenticated users to dashboard
+  if (user) {
+    redirect("/dashboard")
+  }
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
+    <div className="min-h-screen bg-linear-to-b from-background to-muted/20">
       <div className="container mx-auto px-4 py-16">
         {/* Header */}
         <header className="text-center mb-16">
