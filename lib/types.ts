@@ -70,7 +70,7 @@ export interface GenerationResponse {
 }
 
 // Export Format
-export type ExportFormat = "json" | "csv"
+export type ExportFormat = "json" | "csv" | "markdown" | "txt"
 
 // API Response wrapper
 export interface ApiResponse<T = unknown> {
