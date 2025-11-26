@@ -9,6 +9,11 @@ import { generateQuestions } from "@/lib/ai/generation"
 import { generateDocumentEmbeddings } from "@/lib/processing/embeddings-pipeline"
 import { config } from "@/lib/config"
 import prisma from "@/lib/db/prisma"
+import { 
+  getNegativeFeedbackForDocument, 
+  formatNegativeFeedbackForPrompt,
+  analyzeFeedbackPatterns 
+} from "@/lib/rag/feedback-context"
 
 const generateSchema = z.object({
   documentId: z.string().uuid(),
@@ -138,6 +143,17 @@ export async function POST(request: Request) {
       }
     }
 
+    // Get negative feedback to avoid similar mistakes
+    const negativeFeedbacks = await getNegativeFeedbackForDocument(documentId, user.id)
+    const feedbackPrompt = formatNegativeFeedbackForPrompt(negativeFeedbacks)
+    
+    // Analyze patterns if there's significant negative feedback
+    if (negativeFeedbacks.length > 0) {
+      const patterns = analyzeFeedbackPatterns(negativeFeedbacks)
+      console.log(`[GENERATE] Found ${negativeFeedbacks.length} negative feedbacks`)
+      console.log(`[GENERATE] Most common issues:`, patterns.mostCommonReasons.slice(0, 3))
+    }
+
     const allQuestions: Array<{
       text: string
       level: string
@@ -185,6 +201,7 @@ export async function POST(request: Request) {
           provider,
           purpose,
           includeAnswers,
+          feedbackContext: feedbackPrompt, // Include negative feedback context
         }
       )
 

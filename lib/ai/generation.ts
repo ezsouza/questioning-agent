@@ -44,12 +44,13 @@ export async function generateQuestions(
   context: string,
   level: string,
   count: number,
-  options: GenerationOptions = {},
+  options: GenerationOptions & { feedbackContext?: string } = {},
 ): Promise<GeneratedQuestion[]> {
   const provider = options.provider || config.ai.provider
   const temperature = options.temperature || config.generation.temperature
   const purpose = options.purpose || "EVALUATION"
   const includeAnswers = options.includeAnswers || false
+  const feedbackContext = options.feedbackContext || ''
 
   // Validate context is not empty
   if (!context || context.trim().length === 0) {
@@ -61,7 +62,7 @@ export async function generateQuestions(
     throw new Error("Cannot generate questions: context is too short. Document may not have enough content.")
   }
 
-  const prompt = buildPrompt(context, level, count, purpose, includeAnswers)
+  const prompt = buildPrompt(context, level, count, purpose, includeAnswers, feedbackContext)
 
   try {
     // Use configured model
@@ -83,7 +84,7 @@ export async function generateQuestions(
   }
 }
 
-function buildPrompt(context: string, level: string, count: number, purpose: string = "EVALUATION", includeAnswers: boolean = false): string {
+function buildPrompt(context: string, level: string, count: number, purpose: string = "EVALUATION", includeAnswers: boolean = false, feedbackContext: string = ''): string {
   const levelDescription = COGNITIVE_LEVEL_PROMPTS[level as keyof typeof COGNITIVE_LEVEL_PROMPTS] || COGNITIVE_LEVEL_PROMPTS.UNDERSTAND
 
   const purposeContext = purpose === "CREATION" 
@@ -96,7 +97,7 @@ function buildPrompt(context: string, level: string, count: number, purpose: str
 
   return `Você é um especialista em criação de conteúdo educacional, especializado na Taxonomia de Bloom.
 
-IMPORTANTE: Você deve criar questões EXCLUSIVAMENTE baseadas no contexto fornecido abaixo. NÃO use conhecimento externo, suposições ou informações que não estejam explicitamente presentes no texto.
+IMPORTANTE: Você deve criar questões EXCLUSIVAMENTE baseadas no contexto fornecido abaixo. NÃO use conhecimento externo, suposições ou informações que não estejam explicitamente presentes no texto.${feedbackContext}
 
 ==== CONTEXTO DO DOCUMENTO (USE APENAS ESTE CONTEÚDO) ====
 ${context}
