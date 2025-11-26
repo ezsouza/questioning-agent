@@ -61,7 +61,7 @@ export function DocsContent() {
               <li>Geração automática de questões em múltiplos níveis cognitivos</li>
               <li>Suporte para PDF, DOCX, TXT e Markdown</li>
               <li>Busca semântica com embeddings vetoriais</li>
-              <li>Exportação flexível (JSON, CSV)</li>
+              <li>Exportação flexível (JSON, CSV, Markdown, Plain Text)</li>
             </ul>
           </AlertDescription>
         </Alert>
@@ -579,6 +579,46 @@ GOOGLE_CLIENT_SECRET="..."`}
                   {`id,text,level,difficulty
 q1,"...",aplicacao,medium
 q2,"...",analise,hard`}
+                </code>
+              </pre>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base sm:text-lg">Markdown</CardTitle>
+              <CardDescription className="text-sm">Formato legível para documentação e compartilhamento</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <pre className="rounded-lg bg-muted p-3 sm:p-4 overflow-x-auto text-xs">
+                <code>
+                  {`# Questões Geradas
+
+## Questão 1
+**Nível:** Aplicação | **Dificuldade:** Médio
+
+...
+
+**Resposta:** ...`}
+                </code>
+              </pre>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base sm:text-lg">Plain Text</CardTitle>
+              <CardDescription className="text-sm">Formato simples para impressão e visualização</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <pre className="rounded-lg bg-muted p-3 sm:p-4 overflow-x-auto text-xs">
+                <code>
+                  {`QUESTÃO 1 [Aplicação - Médio]
+...
+
+RESPOSTA: ...
+
+---`}
                 </code>
               </pre>
             </CardContent>
