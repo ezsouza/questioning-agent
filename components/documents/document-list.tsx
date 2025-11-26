@@ -34,7 +34,7 @@ interface Document {
   badges?: string[]
   createdAt: Date | string
   blobUrl?: string | null
-  _count: {
+  _count?: {
     chunks: number
     questions: number
   }
@@ -228,7 +228,7 @@ export function DocumentList({ documents }: DocumentListProps) {
 
                 <div className="flex items-center gap-4 text-sm text-muted-foreground mb-2">
                   <span>{formatBytes(doc.size)}</span>
-                  {doc.status === "INDEXED" && doc._count.chunks > 0 && (
+                  {doc.status === "INDEXED" && doc._count && doc._count.chunks > 0 && (
                     <>
                       <span>{doc._count.chunks} blocos</span>
                       <span>{doc._count.questions} questões</span>
@@ -263,7 +263,7 @@ export function DocumentList({ documents }: DocumentListProps) {
                 {/* Process/Generate button */}
                 {doc.status === "INDEXED" && !isBeingDeleted && (
                   <>
-                    {doc._count.chunks === 0 ? (
+                    {!doc._count || doc._count.chunks === 0 ? (
                       <Button
                         variant="default"
                         size="sm"
